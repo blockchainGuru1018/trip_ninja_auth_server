@@ -1,11 +1,6 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.utils.translation import ugettext_lazy as _
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
-from rest_framework.utils import json
-from datetime import datetime, timedelta
-import requests
 import re
 
 from common.exception import CustomException
