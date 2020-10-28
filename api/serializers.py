@@ -46,13 +46,13 @@ class RegistrationSerializer(serializers.ModelSerializer):
             if not bool(re.match('^[a-zA-Z0-9]+$', username)) or len(username) > 40:
                 raise CustomException(code=12, message=self.error_messages['invalid_username'])
             elif User.objects.filter(username=username).exists():
-                raise CustomException(code=15, message=self.error_messages['invalid_username'])
+                raise CustomException(code=13, message=self.error_messages['invalid_username'])
         if not first_name:
-            raise CustomException(code=13, message=self.error_messages['invalid_first_name'])
+            raise CustomException(code=14, message=self.error_messages['invalid_first_name'])
         if not last_name:
-            raise CustomException(code=13, message=self.error_messages['invalid_last_name'])
+            raise CustomException(code=15, message=self.error_messages['invalid_last_name'])
         if not password or len(password) < 6:
-            raise CustomException(code=14, message=self.error_messages['invalid_password'])
+            raise CustomException(code=16, message=self.error_messages['invalid_password'])
 
         attrs['password'] = make_password(attrs['password'])
         return attrs
