@@ -8,7 +8,7 @@ from datetime import datetime
 import random
 
 from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
-    ChangePasswordSerializer
+    ChangePasswordSerializer, SocialLoginSerializer
 from users.models import User
 
 
@@ -134,3 +134,50 @@ class ChangePasswordView(CreateAPIView):
         user.save()
 
         return Response({"result": True}, status=status.HTTP_200_OK)
+
+
+class SocialLoginView(CreateAPIView):
+    authentication_classes = ()
+    permission_classes = ()
+    serializer_class = SocialLoginSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user_info = serializer.validated_data['user_info']
+        provider = serializer.data.get('provider')
+        try:
+            user = User.objects.get(email=user_info['email'])
+        except ObjectDoesNotExist:
+            user = User()
+            if provider == 'google':
+                user.email = user_info['email']
+                user.username = user_info['name']
+                user.email_confirmed = True
+            elif provider == 'facebook':
+                user.email = user_info['email']
+                user.username = user_info['name']
+                user.email_confirmed = True
+            user.save()
+
+        if not user.is_active:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 13,
+                    "errorMsg": "User account is disabled."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        response = {
+            "result": True,
+            "data": {
+                "user": {
+                    "user_id": user.id,
+                    "email": user.email,
+                    "username": user.username,
+                }
+            }
+        }
+
+        return Response(response, status=status.HTTP_201_CREATED)

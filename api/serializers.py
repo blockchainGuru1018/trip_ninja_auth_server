@@ -197,3 +197,44 @@ class ChangePasswordSerializer(serializers.Serializer):
             return attrs
         else:
             raise CustomException(code=10, message=self.error_messages['invalid_current_password'])
+
+
+class SocialLoginSerializer(serializers.Serializer):
+    access_token = serializers.CharField(required=False)
+    provider = serializers.CharField(required=False)
+
+    default_error_messages = {
+        'invalid_token': _('Access Token is invalid.'),
+        'invalid_provider': _('Google or Facebook login is supported.'),
+        'wrong_token': _('wrong google token / this google token is already expired.'),
+        'wrong_facebook_token': _('wrong facebook token / this facebook token is already expired.')
+    }
+
+    def validate(self, attrs):
+        access_token = attrs.get("access_token")
+        provider = attrs.get("provider")
+
+        if not access_token:
+            raise CustomException(code=10, message=self.error_messages['invalid_token'])
+        if provider not in ["google", "facebook", "apple"]:
+            raise CustomException(code=11, message=self.error_messages['invalid_provider'])
+
+        if provider == "google":
+            payload = {'access_token': access_token}  # validate the token
+            r = requests.get('https://www.googleapis.com/oauth2/v3/userinfo', params=payload)
+            data = json.loads(r.text)
+
+            if 'error' in data:
+                raise CustomException(code=12, message=self.error_messages['wrong_token'])
+
+            attrs['user_info'] = data
+        elif provider == "facebook":
+            payload = {'access_token': access_token}  # validate the token
+            r = requests.get('https://graph.facebook.com/me?fields=email,name', params=payload)
+            data = json.loads(r.text)
+
+            if 'error' in data:
+                raise CustomException(code=13, message=self.error_messages['wrong_facebook_token'])
+
+            attrs['user_info'] = data
+        return attrs
