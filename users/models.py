@@ -7,7 +7,7 @@ from teams.models import Agency, Team
 
 class UserLayer(models.Model):
     class Meta:
-        db_table = 'User_Layer'
+        db_table = 'users_layer'
     name = models.CharField(max_length=20)
 
     def __str__(self):
