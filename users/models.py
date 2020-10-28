@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, AbstractUser
 from django.db import models
 
 from common.models import CommonParameters
@@ -20,10 +20,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=100)
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
-    user_type = models.ForeignKey(UserLayer, on_delete=models.CASCADE, related_name='userlayer')
-    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='agency')
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='agency')
-    common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE, related_name='agency')
+    user_type = models.ForeignKey(UserLayer, on_delete=models.CASCADE, related_name='user_Layer')
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='user_agency')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='user_teams')
+    common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
+                                             related_name='user_common_parameters')
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
     search_endpoint = models.CharField(max_length=8, default="prod")

@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 
 
 class BaseModel(models.Model):
@@ -17,8 +17,8 @@ class CommonParameters(models.Model):
     currency = models.CharField(max_length=3)
     date_type = models.CharField(max_length=10)
     booking_enabled = models.BooleanField(default=True)
-    exclude_carriers = JSONField(max_length=255, default=[], blank=True)
-    DATE_CHOICES = [('USA',), ('UK',)]
+    exclude_carriers = JSONField(max_length=255, default=dict(), blank=True)
+    DATE_CHOICES = (("USA", "USA"), ("UK", "UK"))
 
     def __str__(self):
         return self.pk

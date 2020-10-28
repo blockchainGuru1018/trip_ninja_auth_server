@@ -22,4 +22,3 @@ psutil
 ipython
 sentry-sdk
 requests
-fcm_django
