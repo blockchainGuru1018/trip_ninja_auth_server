@@ -9,6 +9,7 @@ class Agency(BaseModel):
     amadeus_branded_fares = models.BooleanField(default=False)
     api_username = models.CharField(max_length=40, default="trialaccount")
     api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr")
+    style_group = models.CharField(max_length=20)
     travelport_itx = models.BooleanField(default=False)
     student_and_youth = models.BooleanField(default=False)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
