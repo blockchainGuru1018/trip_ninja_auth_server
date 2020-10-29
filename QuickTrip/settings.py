@@ -6,7 +6,7 @@ ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 DEBUG = True
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'asdfasdfasdfasdfasdfasdfs'
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '192.168.0.103']
 
 AUTH_USER_MODEL = "users.User"
 
@@ -25,10 +25,10 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_auth.registration',
 
-    'common',
-    'users',
     'api',
-    'teams'
+    'common',
+    'teams',
+    'users'
 ]
 
 MIDDLEWARE = [

@@ -7,15 +7,16 @@ class Agency(BaseModel):
 
     name = models.CharField(max_length=100)
     amadeus_branded_fares = models.BooleanField(default=False)
-    api_username = models.CharField(max_length=40, default="trialaccount")
-    api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr")
+    api_username = models.CharField(max_length=40, default="trialaccount", null=True)
+    api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr", null=True)
     travelport_itx = models.BooleanField(default=False)
     student_and_youth = models.BooleanField(default=False)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
-                                             related_name='agency_common_parameters')
+                                             related_name='agency_common_parameters', null=True)
+    admin = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='agency_user', null=True)
 
     def __str__(self):
-        return self.pk
+        return self.name
 
 
 class DataSource(BaseModel):
@@ -27,16 +28,17 @@ class DataSource(BaseModel):
     pcc = models.CharField(max_length=15, default="2G3C")
     provider = models.CharField(max_length=2, choices=PROVIDER_CHOICES, default="1V")
     active = models.BooleanField(default=True)
-    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='datasource_agency')
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='datasource_agency', null=True)
     queue = models.CharField(max_length=40, default="01")
 
 
 class Team(BaseModel):
 
     name = models.CharField(max_length=100)
-    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='teams_agency')
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='teams_agency', null=True)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
-                                             related_name='teams_common_parameters')
+                                             related_name='teams_common_parameters', null=True)
+    admin = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='team_user', null=True)
 
     def __str__(self):
-        return self.pk
+        return self.name
