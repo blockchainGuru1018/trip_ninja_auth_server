@@ -17,6 +17,7 @@ class CommonParameters(models.Model):
     currency = models.CharField(max_length=3)
     date_type = models.CharField(max_length=10)
     booking_enabled = models.BooleanField(default=True)
+    virtual_interlining = models.BooleanField(default=True)
     exclude_carriers = JSONField(max_length=255, default=dict, blank=True)
     DATE_CHOICES = (("USA", "USA"), ("UK", "UK"))
 

@@ -5,10 +5,10 @@ from common.models import BaseModel, CommonParameters
 
 class Agency(BaseModel):
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default=False)
     amadeus_branded_fares = models.BooleanField(default=False)
-    api_username = models.CharField(max_length=40, default="trialaccount", null=True)
-    api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr", null=True)
+    api_username = models.CharField(max_length=40, default="trialaccount")
+    api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr")
     travelport_itx = models.BooleanField(default=False)
     student_and_youth = models.BooleanField(default=False)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
