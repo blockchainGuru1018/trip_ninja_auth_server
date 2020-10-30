@@ -19,7 +19,7 @@ class CommonParameters(models.Model):
     booking_enabled = models.BooleanField(default=True)
     virtual_interlining = models.BooleanField(default=True)
     exclude_carriers = JSONField(max_length=255, default=dict, blank=True)
-    DATE_CHOICES = (("USA", "USA"), ("UK", "UK"))
+    DATE_CHOICES = (("USA", "USA"), ("UK", "UK")) # break out tuples
 
     def __str__(self):
         return self.pk
