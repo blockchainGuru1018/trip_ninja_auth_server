@@ -23,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_agent = models.BooleanField(default=False)
     is_team_lead = models.BooleanField(default=False)
     is_agency_admin = models.BooleanField(default=False)
-    ENDPOINT_CHOICES = ["prod", "preprod"]
+    ENDPOINT_CHOICES = [("prod", "prod"), ("preprod", "preprod")]
     search_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
     booking_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
 
