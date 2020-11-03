@@ -78,3 +78,41 @@ class AllUserDetailView(GenericAPIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+
+class SearchDetailView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+
+    def get(self, request):
+        keyword = request.GET.get('keyword')
+        page = request.GET.get('page')
+        number_per_page = request.GET.get('per_page')
+        if keyword:
+            allusers = User.objects.filter(username__icontains=keyword)
+            number_of_active_users = User.objects.filter(username__icontains=keyword, is_active=True).count()
+        else:
+            allusers = User.objects.all()
+            number_of_active_users = User.objects.filter(is_active=True).count()
+        paginator = Paginator(allusers, number_per_page)
+        try:
+            search = paginator.page(page)
+        except PageNotAnInteger:
+            search = paginator.page(1)
+        except EmptyPage:
+            search = []
+
+        sea_users = []
+        for sea in search:
+            sea_users.append({
+                **serialize_user(sea),
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "number_of_active_users": number_of_active_users,
+                    "users": sea_users
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
