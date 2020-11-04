@@ -6,14 +6,14 @@ from rest_framework.response import Response
 
 from teams.models import Team, Agency
 from users.models import User
-from .serializers import TeamAddSerializer
+from .serializers import TeamAddSerializer, TeamUpdateSerializer
 
 
 class AllTeamsView(GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = ()
 
-    def post(self, request):
+    def get(self, request):
         is_agency_admin = Agency.objects.filter(admin=request.user).exists()
         if not is_agency_admin:
             return Response(
@@ -55,7 +55,7 @@ class TeamDetailView(GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = ()
 
-    def post(self, request, pk):
+    def get(self, request, pk):
         try:
             team = Team.objects.get(id=pk)
             is_team_admin = Team.objects.filter(admin=request.user).exists()
@@ -134,6 +134,47 @@ class AddTeamView(GenericAPIView):
                 "result": True,
                 "data": {
                     "Msg": "Team created",
+                    "team_id": team.id,
+                    "team_name": team.name,
+                    "team_admin": team.admin.username,
+                    "team_agency": team.agency.name
+                }
+
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class UpdateTeamView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = ()
+    serializer_class = TeamUpdateSerializer
+
+    def put(self, request):
+        is_agency_admin = Agency.objects.filter(admin=request.user).exists()
+        if not is_agency_admin:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 3,
+                    "errorMsg": "You don't have the permission."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        team = serializer.validated_data['team']
+        team.name = serializer.data.get('name')
+        team.agency = serializer.validated_data['agency']
+        team.admin = serializer.validated_data['admin']
+        team.common_parameters = serializer.validated_data['common_parameter']
+        team.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "Msg": "Team updated",
                     "team_id": team.id,
                     "team_name": team.name,
                     "team_admin": team.admin.username,
