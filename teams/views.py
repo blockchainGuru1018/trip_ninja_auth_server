@@ -98,7 +98,39 @@ class TeamDetailView(GenericAPIView):
                 {
                     "result": False,
                     "errorCode": 1,
-                    "errorMsg": "Invalid agency id."
+                    "errorMsg": "Invalid team id."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request, pk):
+        try:
+            is_agency_admin = Agency.objects.filter(admin=request.user).exists()
+            if not is_agency_admin:
+                return Response(
+                    {
+                        "result": False,
+                        "errorCode": 3,
+                        "errorMsg": "You don't have the permission."
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            Team(id=pk).delete()
+
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "msg": "Team removed successfully."
+                    }
+                }
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 1,
+                    "errorMsg": "Invalid team id."
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -139,7 +171,6 @@ class AddTeamView(GenericAPIView):
                     "team_admin": team.admin.username,
                     "team_agency": team.agency.name
                 }
-
             },
             status=status.HTTP_201_CREATED
         )
@@ -180,7 +211,6 @@ class UpdateTeamView(GenericAPIView):
                     "team_admin": team.admin.username,
                     "team_agency": team.agency.name
                 }
-
             },
             status=status.HTTP_201_CREATED
         )
