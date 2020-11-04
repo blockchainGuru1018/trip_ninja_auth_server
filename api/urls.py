@@ -1,13 +1,12 @@
 from django.urls import path, re_path, include
 from .views import UserLoginView, UserRegistrationView, ForgotPasswordView, ConfirmTokenView, ResetPasswordView, \
-    ChangePasswordView, UserLogoutView, SocialLoginView
+    ChangePasswordView, UserLogoutView
 
 app_name = 'api'
 
 urlpatterns = [
     path('register/', UserRegistrationView.as_view()),
     path('login/', UserLoginView.as_view()),
-    path('social-login/', SocialLoginView.as_view()),
     path('forgot-password/', ForgotPasswordView.as_view()),
     path('confirm-token/', ConfirmTokenView.as_view()),
     path('reset-password/', ResetPasswordView.as_view()),
