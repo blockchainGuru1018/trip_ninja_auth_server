@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from teams.models import Team, Agency
 from users.models import User
-from .serializers import TeamAddSerializer, TeamUpdateSerializer
+from .serializers import TeamAddSerializer, TeamUpdateSerializer, AgencyAddSerializer, AgencyUpdateSerializer
 
 
 class AllTeamsView(GenericAPIView):
@@ -33,7 +33,7 @@ class AllTeamsView(GenericAPIView):
             team_detail.append({
                 "team_name": team.name,
                 "team_admin": team.admin.username,
-                "creatd_at": team.created_at,
+                "created_at": team.created_at,
                 "number_of_teammembers": number_of_teammembers
             })
 
@@ -165,7 +165,6 @@ class AddTeamView(GenericAPIView):
             {
                 "result": True,
                 "data": {
-                    "Msg": "Team created",
                     "team_id": team.id,
                     "team_name": team.name,
                     "team_admin": team.admin.username,
@@ -210,6 +209,131 @@ class UpdateTeamView(GenericAPIView):
                     "team_name": team.name,
                     "team_admin": team.admin.username,
                     "team_agency": team.agency.name
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AgencyListView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = ()
+
+    def get(self, request):
+        is_superuser = User.objects.filter(is_superuser=request.user).exists()
+        if not is_superuser:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 3,
+                    "errorMsg": "You don't have the permission."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        number_of_agencies = Agency.objects.all().count()
+        agency_list = Agency.objects.all()
+        agency_detail = []
+        for agency in agency_list:
+            number_of_teams = Team.objects.filter(agency=agency).count()
+            agency_detail.append({
+                "agency_name": agency.name,
+                "agency_admin": agency.admin.username,
+                "created_at": agency.created_at,
+                "number_of_teams": number_of_teams
+            })
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "superuser_name": request.user.username,
+                    "number_of_agencies": number_of_agencies,
+                    "agency_list": agency_detail
+                }
+            }
+        )
+
+
+class AddAgencyView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = ()
+    serializer_class = AgencyAddSerializer
+
+    def post(self, request):
+        is_superuser = User.objects.filter(is_superuser=request.user).exists()
+        if not is_superuser:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 3,
+                    "errorMsg": "You don't have the permission."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        agency = Agency()
+        agency.name = serializer.data.get('name')
+        agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
+        agency.api_username = serializer.data.get('api_username')
+        agency.api_password = serializer.data.get('api_password')
+        agency.style_group = serializer.data.get('style_group')
+        agency.is_iframe = serializer.data.get('is_iframe')
+        agency.student_and_youth = serializer.data.get('student_and_youth')
+        agency.common_parameters = serializer.validated_data['common_parameter']
+        agency.admin = serializer.validated_data['admin']
+        agency.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "agency_id": agency.id,
+                    "agency_name": agency.name,
+                    "agency_admin": agency.admin.username
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class UpdateAgencyView(GenericAPIView):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = ()
+    serializer_class = AgencyUpdateSerializer
+
+    def put(self, request):
+        is_superuser = User.objects.filter(is_superuser=request.user).exists()
+        if not is_superuser:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 3,
+                    "errorMsg": "You don't have the permission."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        agency = serializer.validated_data['agency']
+        agency.name = serializer.data.get('name')
+        agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
+        agency.api_username = serializer.data.get('api_username')
+        agency.api_password = serializer.data.get('api_password')
+        agency.style_group = serializer.data.get('style_group')
+        agency.is_iframe = serializer.data.get('is_iframe')
+        agency.student_and_youth = serializer.data.get('student_and_youth')
+        agency.common_parameters = serializer.validated_data['common_parameter']
+        agency.admin = serializer.validated_data['admin']
+        agency.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "agency_id": agency.id,
+                    "agency_name": agency.name,
+                    "agency_admin": agency.admin.username
                 }
             },
             status=status.HTTP_201_CREATED
