@@ -181,7 +181,11 @@ class UpdateTeamView(GenericAPIView):
     serializer_class = TeamUpdateSerializer
 
     def put(self, request):
-        is_agency_admin = Agency.objects.filter(admin=request.user).exists()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        team = serializer.validated_data['team']
+
+        is_agency_admin = Agency.objects.filter(admin=request.user) == team.agency
         if not is_agency_admin:
             return Response(
                 {
@@ -191,9 +195,7 @@ class UpdateTeamView(GenericAPIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        team = serializer.validated_data['team']
+
         team.name = serializer.data.get('name')
         team.agency = serializer.validated_data['agency']
         team.admin = serializer.validated_data['admin']
