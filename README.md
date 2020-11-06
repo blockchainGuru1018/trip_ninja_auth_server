@@ -1,5 +1,6 @@
 # trip_ninja_auth_server
 
+  `If you have installed this project in this machine before, make sure to clear old database.`
 
 - Open a command line window and go to the project's directory.
   
@@ -7,9 +8,8 @@
 
 - Create the migrations for each app: 
   
-  `python manage.py makemigrations <App name>`
-  
-  `<App name> = {'users', 'teams', 'common'}`
+  `python manage.py makemigrations`
+
 - Run the migrations:
 
   `python manage.py migrate`
