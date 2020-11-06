@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from teams.models import Team, Agency
 from users.models import User
-from .serializers import TeamAddSerializer, TeamUpdateSerializer, AgencyAddSerializer, AgencyUpdateSerializer
+from .serializers import TeamAddSerializer, TeamUpdateSerializer, AgencySerializer
 
 
 class AllTeamsView(GenericAPIView):
@@ -256,10 +256,10 @@ class AgencyListView(GenericAPIView):
         )
 
 
-class AddAgencyView(GenericAPIView):
+class AgencyView(GenericAPIView):
     authentication_classes = (TokenAuthentication,)
     permission_classes = ()
-    serializer_class = AgencyAddSerializer
+    serializer_class = AgencySerializer
 
     def post(self, request):
         is_superuser = User.objects.filter(is_superuser=request.user).exists()
@@ -298,45 +298,49 @@ class AddAgencyView(GenericAPIView):
             status=status.HTTP_201_CREATED
         )
 
+    def put(self, request, pk):
+        try:
+            agency = Agency.objects.get(id=pk)
+            is_superuser = User.objects.filter(is_superuser=request.user).exists()
+            if not is_superuser:
+                return Response(
+                    {
+                        "result": False,
+                        "errorCode": 3,
+                        "errorMsg": "You don't have the permission."
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            agency.name = serializer.data.get('name')
+            agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
+            agency.api_username = serializer.data.get('api_username')
+            agency.api_password = serializer.data.get('api_password')
+            agency.style_group = serializer.data.get('style_group')
+            agency.is_iframe = serializer.data.get('is_iframe')
+            agency.student_and_youth = serializer.data.get('student_and_youth')
+            agency.common_parameters = serializer.validated_data['common_parameter']
+            agency.admin = serializer.validated_data['admin']
+            agency.save()
 
-class UpdateAgencyView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
-    serializer_class = AgencyUpdateSerializer
-
-    def put(self, request):
-        is_superuser = User.objects.filter(is_superuser=request.user).exists()
-        if not is_superuser:
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "agency_id": agency.id,
+                        "agency_name": agency.name,
+                        "agency_admin": agency.admin.username
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
+        except ObjectDoesNotExist:
             return Response(
                 {
                     "result": False,
                     "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
+                    "errorMsg": "agency_id is invalid."
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        agency = serializer.validated_data['agency']
-        agency.name = serializer.data.get('name')
-        agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
-        agency.api_username = serializer.data.get('api_username')
-        agency.api_password = serializer.data.get('api_password')
-        agency.style_group = serializer.data.get('style_group')
-        agency.is_iframe = serializer.data.get('is_iframe')
-        agency.student_and_youth = serializer.data.get('student_and_youth')
-        agency.common_parameters = serializer.validated_data['common_parameter']
-        agency.admin = serializer.validated_data['admin']
-        agency.save()
-
-        return Response(
-            {
-                "result": True,
-                "data": {
-                    "agency_id": agency.id,
-                    "agency_name": agency.name,
-                    "agency_admin": agency.admin.username
-                }
-            },
-            status=status.HTTP_201_CREATED
-        )
