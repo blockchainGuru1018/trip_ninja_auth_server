@@ -66,6 +66,7 @@ TEMPLATES = [
     },
 ]
 
+SITE_ID = 1
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
