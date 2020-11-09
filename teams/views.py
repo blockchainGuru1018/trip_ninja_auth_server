@@ -15,7 +15,8 @@ class AllTeamsView(GenericAPIView):
 
     def get(self, request):
         is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-        if not is_agency_admin:
+        is_permission = is_agency_admin | request.user.is_superuser
+        if not is_permission:
             return Response(
                 {
                     "result": False,
@@ -24,31 +25,54 @@ class AllTeamsView(GenericAPIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        agency = Agency.objects.get(admin=request.user)
-        number_of_teams = Team.objects.filter(agency=agency).count()
-        team_list = Team.objects.filter(agency=agency)
-        team_detail = []
-        for team in team_list:
-            number_of_teammembers = User.objects.filter(team=team).count()
-            team_detail.append({
-                "team_name": team.name,
-                "team_admin": team.admin.username,
-                "created_at": team.created_at,
-                "number_of_teammembers": number_of_teammembers
-            })
+        if is_agency_admin:
+            agency = Agency.objects.get(admin=request.user)
+            number_of_teams = Team.objects.filter(agency=agency).count()
+            team_list = Team.objects.filter(agency=agency)
+            team_detail = []
+            for team in team_list:
+                number_of_teammembers = User.objects.filter(team=team).count()
+                team_detail.append({
+                    "team_name": team.name,
+                    "team_admin": team.admin.username,
+                    "created_at": team.created_at,
+                    "number_of_teammembers": number_of_teammembers
+                })
 
-        return Response(
-            {
-                "result": True,
-                "data": {
-                    "Agency_name": agency.name,
-                    "created_at": agency.created_at,
-                    "admin_name": agency.admin.username,
-                    "number_of_teams": number_of_teams,
-                    "Team_details": team_detail
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "Agency_name": agency.name,
+                        "created_at": agency.created_at,
+                        "admin_name": agency.admin.username,
+                        "number_of_teams": number_of_teams,
+                        "Team_details": team_detail
+                    }
                 }
-            }
-        )
+            )
+        else:
+            number_of_teams = Team.objects.all().count()
+            team_list = Team.objects.all()
+            team_detail = []
+            for team in team_list:
+                number_of_teammembers = User.objects.filter(team=team).count()
+                team_detail.append({
+                    "team_name": team.name,
+                    "team_admin": team.admin.username,
+                    "created_at": team.created_at,
+                    "number_of_teammembers": number_of_teammembers
+                })
+
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "number_of_teams": number_of_teams,
+                        "Team_details": team_detail
+                    }
+                }
+            )
 
 
 class TeamDetailView(GenericAPIView):
@@ -59,7 +83,8 @@ class TeamDetailView(GenericAPIView):
         try:
             team = Team.objects.get(id=pk)
             is_team_admin = Team.objects.filter(admin=request.user).exists()
-            if not is_team_admin:
+            is_permission = is_team_admin | request.user.is_superuser
+            if not is_permission:
                 return Response(
                     {
                         "result": False,
@@ -76,9 +101,7 @@ class TeamDetailView(GenericAPIView):
                     "email": agent.email,
                     "first_name": agent.first_name,
                     "last_name": agent.last_name,
-                    "is_active": agent.is_active,
-                    "created_at": agent.created_at,
-                    "updated_at": agent.updated_at
+                    "is_active": agent.is_active
                 })
 
             return Response(
@@ -106,7 +129,8 @@ class TeamDetailView(GenericAPIView):
     def delete(self, request, pk):
         try:
             is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-            if not is_agency_admin:
+            is_permission = is_agency_admin | request.user.is_superuser
+            if not is_permission:
                 return Response(
                     {
                         "result": False,
@@ -143,7 +167,8 @@ class TeamEditView(GenericAPIView):
 
     def post(self, request):
         is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-        if not is_agency_admin:
+        is_permission = is_agency_admin | request.user.is_superuser
+        if not is_permission:
             return Response(
                 {
                     "result": False,
@@ -179,7 +204,8 @@ class TeamEditView(GenericAPIView):
             team = Team.objects.get(id=pk)
 
             is_agency_admin = Agency.objects.filter(admin=request.user) == team.agency
-            if not is_agency_admin:
+            is_permission = is_agency_admin | request.user.is_superuser
+            if not is_permission:
                 return Response(
                     {
                         "result": False,
@@ -225,7 +251,7 @@ class AgencyListView(GenericAPIView):
     permission_classes = ()
 
     def get(self, request):
-        is_superuser = User.objects.filter(is_superuser=request.user).exists()
+        is_superuser = request.user.is_superuser
         if not is_superuser:
             return Response(
                 {
@@ -265,7 +291,7 @@ class AgencyView(GenericAPIView):
     serializer_class = AgencySerializer
 
     def post(self, request):
-        is_superuser = User.objects.filter(is_superuser=request.user).exists()
+        is_superuser = request.user.is_superuser
         if not is_superuser:
             return Response(
                 {
@@ -304,8 +330,8 @@ class AgencyView(GenericAPIView):
     def put(self, request, pk):
         try:
             agency = Agency.objects.get(id=pk)
-            is_superuser = User.objects.filter(is_superuser=request.user).exists()
-            if not is_superuser:
+            is_permission = request.user.is_superuser | Agency.objects.get(admin=request.user)
+            if not is_permission:
                 return Response(
                     {
                         "result": False,

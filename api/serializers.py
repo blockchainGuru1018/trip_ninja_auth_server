@@ -1,11 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.utils.translation import ugettext_lazy as _
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
-from rest_framework.utils import json
 from datetime import datetime, timedelta
-import requests
 import re
 
 from common.exception import CustomException
@@ -16,6 +12,8 @@ class RegistrationSerializer(serializers.ModelSerializer):
     email = serializers.CharField(required=False)
     username = serializers.CharField(required=False)
     first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
 
@@ -54,7 +52,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if not password or len(password) < 6:
             raise CustomException(code=16, message=self.error_messages['invalid_password'])
 
-        attrs['password'] = make_password(attrs['password'])
         return attrs
 
 
@@ -85,7 +82,7 @@ class LoginSerializer(serializers.Serializer):
 
         try:
             self.user = get_user_model().objects.get(**kwargs)
-            if self.user.check_password(password):
+            if self.user.password == password:
                 if self.user.is_active:
                     attrs['user'] = self.user
                     return attrs
@@ -163,7 +160,7 @@ class ResetPasswordSerializer(serializers.Serializer):
             if not user.is_active:
                 raise CustomException(code=12, message=self.error_messages['inactive_account'])
 
-            attrs['password'] = make_password(attrs['password'])
+            attrs['password'] = attrs['password']
             return attrs
         except User.DoesNotExist:
             pass
@@ -192,8 +189,8 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise CustomException(code=11, message=self.error_messages['invalid_password'])
 
         user = User.objects.get(pk=user_id)
-        if user.check_password(current_password):
-            attrs['new_password'] = make_password(attrs['new_password'])
+        if user.current_password:
+            attrs['new_password'] = attrs['new_password']
             return attrs
         else:
             raise CustomException(code=10, message=self.error_messages['invalid_current_password'])

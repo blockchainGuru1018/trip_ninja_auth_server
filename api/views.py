@@ -23,7 +23,6 @@ class UserLoginView(LoginView):
                 "user": {
                     "id": self.user.id,
                     "email": self.user.email,
-                    "user_type": self.user.user_type,
                     "username": self.user.username,
                     "first_name": self.user.first_name,
                     "last_name": self.user.last_name
