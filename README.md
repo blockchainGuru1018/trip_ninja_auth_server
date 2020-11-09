@@ -13,6 +13,11 @@
 - Run the migrations:
 
   `python manage.py migrate`
+
+- initial data set:
+
+  `python manage.py loaddata sampledata.yaml`
+
 - Open another command line window.
 
   `workon theprojectname` or `source theprojectname/bin/activate` depending on if you are using virtualenvwrapper or just virtualenv.
