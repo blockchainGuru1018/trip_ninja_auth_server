@@ -308,10 +308,24 @@ class AddAgencyView(GenericAPIView):
         agency.api_username = serializer.data.get('api_username')
         agency.api_password = serializer.data.get('api_password')
         agency.save()
-        data_source = serializer.validated_data['data_source']
-        data_source.pcc = serializer.data.get('pcc')
-        data_source.agency = agency
-        data_source.save()
+        data_source = serializer.data.get('data_source')
+        if data_source:
+            for data in data_source:
+                try:
+                    data_item = DataSource.objects.get(id=data['id'])
+                    data_item.pcc = data['pcc']
+                    data_item.agency = agency
+                    data_item.save()
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "data_source is invalid."
+                            }
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
 
         return Response(
             {
@@ -337,6 +351,7 @@ class AgencyDetailView(GenericAPIView):
         data_source = []
         for data in data_array:
             data_source.append({
+                "id": data.id,
                 "supplier": data.provider,
                 "pcc": data.pcc
             })
@@ -400,10 +415,25 @@ class AgencyUpdateView(GenericAPIView):
         agency.api_username = serializer.data.get('api_username')
         agency.api_password = serializer.data.get('api_password')
         agency.save()
-        data_source = serializer.validated_data['data_source']
-        data_source.pcc = serializer.data.get('pcc')
-        data_source.agency = agency
-        data_source.save()
+        data_source = serializer.data.get('data_source')
+        DataSource.objects.filter(agency=agency).update(agency=None)
+        if data_source:
+            for data in data_source:
+                try:
+                    data_item = DataSource.objects.get(id=data['id'])
+                    data_item.pcc = data['pcc']
+                    data_item.agency = agency
+                    data_item.save()
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "data_source is invalid."
+                            }
+                        },
+                        status=status.HTTP_201_CREATED
+                    )
 
         return Response(
             {

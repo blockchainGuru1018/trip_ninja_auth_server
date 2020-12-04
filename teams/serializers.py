@@ -48,26 +48,22 @@ class AgencyAddSerializer(serializers.ModelSerializer):
     agency_name = serializers.CharField(required=True)
     api_username = serializers.CharField(required=False)
     api_password = serializers.CharField(required=False)
-    data_source_id = serializers.IntegerField(required=False)
-    pcc = serializers.CharField(required=False)
+    data_source = serializers.ListField(required=False)
 
     default_error_messages = {
         'invalid_name': _('name is invalid.'),
         'invalid_api_username': _('api_username is invalid.'),
         'invalid_data_source_id': _('data_source_id is invalid.'),
-        'invalid_pcc': _('pcc is invalid.'),
     }
 
     class Meta:
         model = Team
-        fields = ("agency_name", "api_username", "api_password", "data_source_id", "pcc")
+        fields = ("agency_name", "api_username", "api_password", "data_source")
 
     def validate(self, attrs):
         agency_name = attrs.get("agency_name")
         api_username = attrs.get("api_username")
         api_password = attrs.get("api_password")
-        data_source_id = attrs.get("data_source_id")
-        pcc = attrs.get("pcc")
 
         if not agency_name:
             raise CustomException(code=10, message=self.error_messages['invalid_name'])
@@ -75,17 +71,8 @@ class AgencyAddSerializer(serializers.ModelSerializer):
             raise CustomException(code=11, message=self.error_messages['invalid_api_username'])
         if not api_password:
             raise CustomException(code=12, message=self.error_messages['invalid_api_password'])
-        if not data_source_id:
-            raise CustomException(code=13, message=self.error_messages['invalid_data_source_id'])
-        if not pcc:
-            raise CustomException(code=14, message=self.error_messages['invalid_pcc'])
 
-        try:
-            data_source = DataSource.objects.get(id=data_source_id)
-            attrs['data_source'] = data_source
-            return attrs
-        except ObjectDoesNotExist:
-            raise CustomException(code=15, message=self.error_messages['invalid_data_source_id'])
+        return attrs
 
 
 class TeamSerializer(serializers.Serializer):
@@ -178,28 +165,23 @@ class AgencyUpdateSerializer(serializers.ModelSerializer):
     agency_name = serializers.CharField(required=True)
     api_username = serializers.CharField(required=False)
     api_password = serializers.CharField(required=False)
-    data_source_id = serializers.IntegerField(required=False)
-    pcc = serializers.CharField(required=False)
+    data_source = serializers.ListField(required=False)
 
     default_error_messages = {
         'invalid_agency_id': _('agency_id is invalid.'),
         'invalid_name': _('name is invalid.'),
         'invalid_api_username': _('api_username is invalid.'),
-        'invalid_data_source_id': _('data_source_id is invalid.'),
-        'invalid_pcc': _('pcc is invalid.'),
     }
 
     class Meta:
         model = Team
-        fields = ("agency_id", "agency_name", "api_username", "api_password", "data_source_id", "pcc")
+        fields = ("agency_id", "agency_name", "api_username", "api_password", "data_source")
 
     def validate(self, attrs):
         agency_id = attrs.get("agency_id")
         agency_name = attrs.get("agency_name")
         api_username = attrs.get("api_username")
         api_password = attrs.get("api_password")
-        data_source_id = attrs.get("data_source_id")
-        pcc = attrs.get("pcc")
 
         if not agency_id:
             raise CustomException(code=10, message=self.error_messages['invalid_agency_id'])
@@ -209,16 +191,10 @@ class AgencyUpdateSerializer(serializers.ModelSerializer):
             raise CustomException(code=12, message=self.error_messages['invalid_api_username'])
         if not api_password:
             raise CustomException(code=13, message=self.error_messages['invalid_api_password'])
-        if not data_source_id:
-            raise CustomException(code=14, message=self.error_messages['invalid_data_source_id'])
-        if not pcc:
-            raise CustomException(code=15, message=self.error_messages['invalid_pcc'])
 
         try:
             agency = Agency.objects.get(id=agency_id)
-            data_source = DataSource.objects.get(id=data_source_id)
             attrs['agency'] = agency
-            attrs['data_source'] = data_source
             return attrs
         except ObjectDoesNotExist:
-            raise CustomException(code=16, message=self.error_messages['invalid_data_source_id'])
+            raise CustomException(code=14, message=self.error_messages['invalid_data_source_id'])
