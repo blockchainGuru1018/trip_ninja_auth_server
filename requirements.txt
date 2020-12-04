@@ -22,3 +22,4 @@ psutil
 ipython
 sentry-sdk
 requests
+django-cors-headers==3.4.0

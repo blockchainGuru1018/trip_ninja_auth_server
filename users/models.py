@@ -17,7 +17,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='user_agency', null=True) 
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='user', null=True)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
-                                             related_name='user_common_parameters')
+                                             related_name='user_common_parameters', null=True)
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
     is_agent = models.BooleanField(default=False)

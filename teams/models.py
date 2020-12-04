@@ -9,7 +9,7 @@ class Agency(BaseModel):
     amadeus_branded_fares = models.BooleanField(default=False)
     api_username = models.CharField(max_length=40, default="trialaccount")
     api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr")
-    style_group = models.CharField(max_length=20)
+    style_group = models.CharField(max_length=20, null=True)
     is_iframe = models.BooleanField(default=True)
     student_and_youth = models.BooleanField(default=False)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
@@ -36,6 +36,7 @@ class DataSource(BaseModel):
 class Team(BaseModel):
 
     name = models.CharField(max_length=100)
+    is_booking = models.BooleanField(default=False, null=True)
     agency = models.ForeignKey(Agency, on_delete=models.SET_NULL, related_name='teams_agency', null=True)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,
                                              related_name='teams_common_parameters', null=True)

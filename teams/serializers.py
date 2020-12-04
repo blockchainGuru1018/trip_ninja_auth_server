@@ -3,120 +3,222 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from common.exception import CustomException
-from teams.models import Team, Agency
+from teams.models import Team, Agency, DataSource
 from users.models import User
 from common.models import CommonParameters
 
 
-class TeamSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)
-    agency_id = serializers.IntegerField(required=False)
+class TeamCreateSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(required=False)
+    is_booking = serializers.BooleanField(required=False)
+    members = serializers.ListField(required=False)
     admin_id = serializers.IntegerField(required=False)
-    common_parameter_id = serializers.IntegerField(required=False)
 
     default_error_messages = {
         'invalid_name': _('Name is invalid.'),
-        'invalid_agency': _('Agency is invalid.'),
+        'invalid_booking': _('Booking is invalid.'),
         'invalid_admin': _('Admin is invalid.'),
-        'invalid_common_parameter': _('Common_parameter is invalid.'),
-        'invalid_request': _('Request is invalid.')
     }
 
     class Meta:
         model = Team
-        fields = ("name", "agency_id", "common_parameter_id", "admin_id")
+        fields = ("team_name", "is_booking", "members", "admin_id")
 
     def validate(self, attrs):
-        name = attrs.get("name")
-        agency_id = attrs.get("agency_id")
+        name = attrs.get("team_name")
+        is_booking = attrs.get("is_booking")
         admin_id = attrs.get("admin_id")
-        common_parameter_id = attrs.get("common_parameter_id")
 
         if not name:
             raise CustomException(code=10, message=self.error_messages['invalid_name'])
-        if not agency_id:
-            raise CustomException(code=11, message=self.error_messages['invalid_agency'])
         if not admin_id:
-            raise CustomException(code=12, message=self.error_messages['invalid_admin'])
-        if not common_parameter_id:
-            raise CustomException(code=13, message=self.error_messages['invalid_common_parameter'])
+            raise CustomException(code=11, message=self.error_messages['invalid_admin'])
+        if is_booking is None:
+            raise CustomException(code=12, message=self.error_messages['invalid_booking'])
 
         try:
-            agency = Agency.objects.get(id=agency_id)
             admin = User.objects.get(id=admin_id)
-            common_parameter = CommonParameters.objects.get(id=common_parameter_id)
-            attrs['agency'] = agency
             attrs['admin'] = admin
-            attrs['common_parameter'] = common_parameter
+            return attrs
+        except ObjectDoesNotExist:
+            raise CustomException(code=11, message=self.error_messages['invalid_admin'])
+
+
+class AgencyAddSerializer(serializers.ModelSerializer):
+    agency_name = serializers.CharField(required=True)
+    api_username = serializers.CharField(required=False)
+    api_password = serializers.CharField(required=False)
+    data_source_id = serializers.IntegerField(required=False)
+    pcc = serializers.CharField(required=False)
+
+    default_error_messages = {
+        'invalid_name': _('name is invalid.'),
+        'invalid_api_username': _('api_username is invalid.'),
+        'invalid_data_source_id': _('data_source_id is invalid.'),
+        'invalid_pcc': _('pcc is invalid.'),
+    }
+
+    class Meta:
+        model = Team
+        fields = ("agency_name", "api_username", "api_password", "data_source_id", "pcc")
+
+    def validate(self, attrs):
+        agency_name = attrs.get("agency_name")
+        api_username = attrs.get("api_username")
+        api_password = attrs.get("api_password")
+        data_source_id = attrs.get("data_source_id")
+        pcc = attrs.get("pcc")
+
+        if not agency_name:
+            raise CustomException(code=10, message=self.error_messages['invalid_name'])
+        if not api_username:
+            raise CustomException(code=11, message=self.error_messages['invalid_api_username'])
+        if not api_password:
+            raise CustomException(code=12, message=self.error_messages['invalid_api_password'])
+        if not data_source_id:
+            raise CustomException(code=13, message=self.error_messages['invalid_data_source_id'])
+        if not pcc:
+            raise CustomException(code=14, message=self.error_messages['invalid_pcc'])
+
+        try:
+            data_source = DataSource.objects.get(id=data_source_id)
+            attrs['data_source'] = data_source
+            return attrs
+        except ObjectDoesNotExist:
+            raise CustomException(code=15, message=self.error_messages['invalid_data_source_id'])
+
+
+class TeamSerializer(serializers.Serializer):
+    team_id = serializers.IntegerField(required=False)
+
+    default_error_messages = {
+        'invalid_team': _('Team not found.'),
+        'empty_team_id': _('team_id is required.'),
+    }
+
+    def validate(self, attrs):
+        team_id = attrs.get("team_id")
+
+        if not team_id:
+            raise CustomException(code=10, message=self.error_messages['empty_team_id'])
+
+        try:
+            attrs['team'] = Team.objects.get(id=team_id)
+            return attrs
+        except ObjectDoesNotExist:
+            raise CustomException(code=11, message=self.error_messages['invalid_team'])
+
+
+class TeamUpdateSerializer(serializers.ModelSerializer):
+    team_id = serializers.IntegerField(required=False)
+    team_name = serializers.CharField(required=False)
+    is_booking = serializers.BooleanField(required=False)
+    admin_id = serializers.IntegerField(required=False)
+    members = serializers.ListField(required=False)
+
+    default_error_messages = {
+        'invalid_team_id': _('team_id is invalid.'),
+        'invalid_team_name': _('team_name is invalid.'),
+        'invalid_admin_id': _('admin_id is invalid.'),
+        'invalid_members': _('members is invalid.'),
+        'invalid_is_booking': _('is_booking is invalid.'),
+        'invalid_request': _('invalid request.')
+    }
+
+    class Meta:
+        model = User
+        fields = ("team_id", "team_name", "is_booking", "admin_id", "members")
+
+    def validate(self, attrs):
+        team_id = attrs.get("team_id")
+        team_name = attrs.get("team_name")
+        is_booking = attrs.get("is_booking")
+        admin_id = attrs.get("admin_id")
+
+        if team_id is None:
+            raise CustomException(code=10, message=self.error_messages['invalid_team_id'])
+        if team_name is None:
+            raise CustomException(code=11, message=self.error_messages['invalid_team_name'])
+        if is_booking is None:
+            raise CustomException(code=12, message=self.error_messages['invalid_is_booking'])
+        if admin_id is None:
+            raise CustomException(code=13, message=self.error_messages['invalid_admin_id'])
+
+        try:
+            attrs['team_lead'] = User.objects.get(id=admin_id)
+            attrs['team'] = Team.objects.get(id=team_id)
             return attrs
         except ObjectDoesNotExist:
             raise CustomException(code=14, message=self.error_messages['invalid_request'])
 
 
-class AgencySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=True)
-    amadeus_branded_fares = serializers.BooleanField(required=False)
-    api_username = serializers.CharField(required=False)
-    api_password = serializers.CharField(required=False)
-    style_group = serializers.CharField(required=False)
-    is_iframe = serializers.BooleanField(required=False)
-    student_and_youth = serializers.BooleanField(required=False)
-    common_parameter_id = serializers.IntegerField(required=False)
-    admin_id = serializers.IntegerField(required=False)
+class AgencySerializer(serializers.Serializer):
+    agency_id = serializers.IntegerField(required=False)
 
     default_error_messages = {
+        'invalid_agency': _('agency not found.'),
+        'empty_agency_id': _('agency_id is required.'),
+    }
+
+    def validate(self, attrs):
+        agency_id = attrs.get("agency_id")
+
+        if not agency_id:
+            raise CustomException(code=10, message=self.error_messages['empty_agency_id'])
+
+        try:
+            attrs['agency'] = Agency.objects.get(id=agency_id)
+            return attrs
+        except ObjectDoesNotExist:
+            raise CustomException(code=11, message=self.error_messages['invalid_agency'])
+
+
+class AgencyUpdateSerializer(serializers.ModelSerializer):
+    agency_id = serializers.IntegerField(required=False)
+    agency_name = serializers.CharField(required=True)
+    api_username = serializers.CharField(required=False)
+    api_password = serializers.CharField(required=False)
+    data_source_id = serializers.IntegerField(required=False)
+    pcc = serializers.CharField(required=False)
+
+    default_error_messages = {
+        'invalid_agency_id': _('agency_id is invalid.'),
         'invalid_name': _('name is invalid.'),
-        'invalid_amadeus_branded_fares': _('amadeus_branded_fares is invalid.'),
         'invalid_api_username': _('api_username is invalid.'),
-        'invalid_api_password': _('api_password is invalid.'),
-        'invalid_style_group': _('style_group is invalid.'),
-        'invalid_is_iframe': _('is_iframe is invalid.'),
-        'invalid_student_and_youth': _('student_and_youth is invalid.'),
-        'invalid_common_parameter': _('Common_parameter is invalid.'),
-        'invalid_admin': _('Admin is invalid.'),
-        'invalid_request': _('Request is invalid.')
+        'invalid_data_source_id': _('data_source_id is invalid.'),
+        'invalid_pcc': _('pcc is invalid.'),
     }
 
     class Meta:
         model = Team
-        fields = ("name", "amadeus_branded_fares", "api_username", "api_password", "style_group", "is_iframe",
-                  "student_and_youth", "common_parameter_id", "admin_id")
+        fields = ("agency_id", "agency_name", "api_username", "api_password", "data_source_id", "pcc")
 
     def validate(self, attrs):
-        name = attrs.get("name")
-        amadeus_branded_fares = attrs.get("amadeus_branded_fares")
+        agency_id = attrs.get("agency_id")
+        agency_name = attrs.get("agency_name")
         api_username = attrs.get("api_username")
         api_password = attrs.get("api_password")
-        style_group = attrs.get("style_group")
-        is_iframe = attrs.get("is_iframe")
-        student_and_youth = attrs.get("student_and_youth")
-        common_parameter_id = attrs.get("common_parameter_id")
-        admin_id = attrs.get("admin_id")
+        data_source_id = attrs.get("data_source_id")
+        pcc = attrs.get("pcc")
 
-        if not name:
-            raise CustomException(code=10, message=self.error_messages['invalid_name'])
-        if not amadeus_branded_fares:
-            raise CustomException(code=11, message=self.error_messages['invalid_amadeus_branded_fares'])
+        if not agency_id:
+            raise CustomException(code=10, message=self.error_messages['invalid_agency_id'])
+        if not agency_name:
+            raise CustomException(code=11, message=self.error_messages['invalid_name'])
         if not api_username:
             raise CustomException(code=12, message=self.error_messages['invalid_api_username'])
         if not api_password:
             raise CustomException(code=13, message=self.error_messages['invalid_api_password'])
-        if not style_group:
-            raise CustomException(code=14, message=self.error_messages['invalid_style_group'])
-        if not is_iframe:
-            raise CustomException(code=15, message=self.error_messages['invalid_is_iframe'])
-        if not student_and_youth:
-            raise CustomException(code=16, message=self.error_messages['invalid_student_and_youth'])
-        if not common_parameter_id:
-            raise CustomException(code=17, message=self.error_messages['invalid_common_parameter'])
-        if not admin_id:
-            raise CustomException(code=18, message=self.error_messages['invalid_admin'])
+        if not data_source_id:
+            raise CustomException(code=14, message=self.error_messages['invalid_data_source_id'])
+        if not pcc:
+            raise CustomException(code=15, message=self.error_messages['invalid_pcc'])
 
         try:
-            admin = User.objects.get(id=admin_id)
-            common_parameter = CommonParameters.objects.get(id=common_parameter_id)
-            attrs['admin'] = admin
-            attrs['common_parameter'] = common_parameter
+            agency = Agency.objects.get(id=agency_id)
+            data_source = DataSource.objects.get(id=data_source_id)
+            attrs['agency'] = agency
+            attrs['data_source'] = data_source
             return attrs
         except ObjectDoesNotExist:
-            raise CustomException(code=19, message=self.error_messages['invalid_request'])
+            raise CustomException(code=16, message=self.error_messages['invalid_data_source_id'])

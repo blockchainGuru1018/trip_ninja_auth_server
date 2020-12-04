@@ -1,130 +1,100 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from teams.models import Team, Agency
+from common.serializers import serialize_team, serialize_agency
+from teams.models import Team, Agency, DataSource
 from users.models import User
-from .serializers import TeamSerializer, AgencySerializer
+from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer, TeamUpdateSerializer, \
+    AgencyAddSerializer, AgencyUpdateSerializer
 
 
 class AllTeamsView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
 
     def get(self, request):
-        is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-        is_permission = is_agency_admin | request.user.is_superuser
-        if not is_permission:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        if is_agency_admin:
-            agency = Agency.objects.get(admin=request.user)
-            number_of_teams = Team.objects.filter(agency=agency).count()
-            team_list = Team.objects.filter(agency=agency)
-            team_detail = []
-            for team in team_list:
-                number_of_teammembers = User.objects.filter(team=team).count()
-                team_detail.append({
-                    "team_name": team.name,
-                    "team_admin": team.admin.username,
-                    "created_at": team.created_at,
-                    "number_of_teammembers": number_of_teammembers
-                })
-
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "Agency_name": agency.name,
-                        "created_at": agency.created_at,
-                        "admin_name": agency.admin.username,
-                        "number_of_teams": number_of_teams,
-                        "Team_details": team_detail
-                    }
-                }
-            )
+        keyword = request.GET.get('keyword')
+        page = request.GET.get('page')
+        number_per_page = request.GET.get('per_page')
+        if keyword:
+            allteams = Team.objects.filter(name__icontains=keyword)
+            number_of_team = Team.objects.filter(name__icontains=keyword).count()
         else:
-            number_of_teams = Team.objects.all().count()
-            team_list = Team.objects.all()
-            team_detail = []
-            for team in team_list:
-                number_of_teammembers = User.objects.filter(team=team).count()
-                team_detail.append({
-                    "team_name": team.name,
-                    "team_admin": team.admin.username,
-                    "created_at": team.created_at,
-                    "number_of_teammembers": number_of_teammembers
-                })
+            allteams = Team.objects.all()
+            number_of_team = Team.objects.all().count()
+        paginator = Paginator(allteams, number_per_page)
+        try:
+            search = paginator.page(page)
+        except PageNotAnInteger:
+            search = paginator.page(1)
+        except EmptyPage:
+            search = []
 
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "number_of_teams": number_of_teams,
-                        "Team_details": team_detail
-                    }
+        sea_teams = []
+        for sea in search:
+            number_of_users = User.objects.filter(team=sea).count()
+            sea_teams.append({
+                **serialize_team(sea),
+                "number_of_users": number_of_users,
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "number_of_teams": number_of_team,
+                    "teams": sea_teams
                 }
-            )
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AllTeamsListView(GenericAPIView):
+
+    def get(self, request):
+        team_list = Team.objects.all()
+        team_detail = []
+        for team in team_list:
+            team_detail.append({
+                **serialize_team(team)
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "teams": team_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 
 class TeamDetailView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
+    serializer_class = TeamSerializer
 
     def get(self, request, pk):
-        try:
-            team = Team.objects.get(id=pk)
-            is_team_admin = Team.objects.filter(admin=request.user).exists()
-            is_permission = is_team_admin | request.user.is_superuser
-            if not is_permission:
-                return Response(
-                    {
-                        "result": False,
-                        "errorCode": 3,
-                        "errorMsg": "You don't have the permission."
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            number_of_members = User.objects.filter(team=team).count()
-            agent_list = User.objects.filter(team=team)
-            agent_detail = []
-            for agent in agent_list:
-                agent_detail.append({
-                    "email": agent.email,
-                    "first_name": agent.first_name,
-                    "last_name": agent.last_name,
-                    "is_active": agent.is_active
-                })
+        serializer = self.get_serializer(data={"team_id": pk})
+        serializer.is_valid(raise_exception=True)
+        team = serializer.validated_data['team']
+        members = User.objects.filter(team=team).values_list('id', flat=True)
 
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "team_name": team.name,
-                        "created_at": team.created_at,
-                        "admin_name": team.admin.username,
-                        "number_of_agents": number_of_members,
-                        "agent_details": agent_detail
-                    }
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "team_name": team.name,
+                    "is_booking": team.is_booking,
+                    "team_lead": team.admin.username,
+                    "members": members
                 }
-            )
-        except ObjectDoesNotExist:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 1,
-                    "errorMsg": "Invalid team id."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            }
+        )
 
     def delete(self, request, pk):
         try:
@@ -160,50 +130,234 @@ class TeamDetailView(GenericAPIView):
             )
 
 
-class TeamEditView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
-    serializer_class = TeamSerializer
+class TeamUpdateView(GenericAPIView):
+    serializer_class = TeamUpdateSerializer
 
-    def post(self, request):
-        is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-        is_permission = is_agency_admin | request.user.is_superuser
-        if not is_permission:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    def put(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        team = Team()
-        team.name = serializer.data.get('name')
-        team.agency = serializer.validated_data['agency']
-        team.admin = serializer.validated_data['admin']
-        team.common_parameters = serializer.validated_data['common_parameter']
+        team = serializer.validated_data['team']
+        team.admin = serializer.validated_data['team_lead']
+        team.is_booking = serializer.data.get('is_booking')
+        team.name = serializer.data.get('team_name')
         team.save()
+        members = serializer.data.get('members')
+        if members:
+            User.objects.filter(team=team).update(team=None)
+            User.objects.filter(id__in=members).update(team=team)
 
         return Response(
             {
                 "result": True,
                 "data": {
-                    "team_id": team.id,
-                    "team_name": team.name,
-                    "team_admin": team.admin.username,
-                    "team_agency": team.agency.name
+                    "msg": "team updated successfully."
                 }
             },
             status=status.HTTP_201_CREATED
         )
 
-    def put(self, request, pk):
-        try:
-            team = Team.objects.get(id=pk)
 
-            is_agency_admin = Agency.objects.filter(admin=request.user) == team.agency
+class AddTeamView(GenericAPIView):
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
+    serializer_class = TeamCreateSerializer
+
+    def post(self, request):
+        # is_agency_admin = Agency.objects.filter(admin=request.user).exists()
+        # is_permission = is_agency_admin | request.user.is_superuser
+        # if not is_permission:
+        #     return Response(
+        #         {
+        #             "result": False,
+        #             "errorCode": 3,
+        #             "errorMsg": "You don't have the permission."
+        #         },
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        team = Team()
+        team.name = serializer.data.get('name')
+        team.admin = serializer.validated_data['admin']
+        team.is_booking = serializer.validated_data['is_booking']
+        team.save()
+        members = serializer.data.get('members')
+        if members:
+            for member in members:
+                try:
+                    agent = User.objects.get(id=member)
+                    agent.team = team
+                    agent.is_agent = False
+                    agent.save()
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "members are invalid"
+                            }
+                        }
+                    )
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "msg": "Team created successfully."
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AllAgencyView(GenericAPIView):
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
+
+    def get(self, request):
+        # is_superuser = request.user.is_superuser
+        # if not is_superuser:
+        #     return Response(
+        #         {
+        #             "result": False,
+        #             "errorCode": 3,
+        #             "errorMsg": "You don't have the permission."
+        #         },
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
+        keyword = request.GET.get('keyword')
+        page = request.GET.get('page')
+        number_per_page = request.GET.get('per_page')
+        if keyword:
+            allagencies = Agency.objects.filter(name__icontains=keyword)
+            number_of_agency = Agency.objects.filter(name__icontains=keyword).count()
+        else:
+            allagencies = Agency.objects.all()
+            number_of_agency = Agency.objects.all().count()
+        paginator = Paginator(allagencies, number_per_page)
+        try:
+            search = paginator.page(page)
+        except PageNotAnInteger:
+            search = paginator.page(1)
+        except EmptyPage:
+            search = []
+
+        sea_agency = []
+        for sea in search:
+            teams = Team.objects.filter(agency=sea)
+            number_of_users = 0
+            for team in teams:
+                number_of_users = number_of_users + User.objects.filter(team=team).count()
+            sea_agency.append({
+                **serialize_agency(sea),
+                "number_of_users": number_of_users,
+            })
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "superuser_name": request.user.username,
+                    "number_of_agencies": number_of_agency,
+                    "agency": sea_agency
+                }
+            }
+        )
+
+
+class AgencyListView(GenericAPIView):
+
+    def get(self, request):
+        agency_list = Agency.objects.all()
+        agency_detail = []
+        for agency in agency_list:
+            agency_detail.append({
+                **serialize_agency(agency)
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "agency": agency_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AddAgencyView(GenericAPIView):
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
+    serializer_class = AgencyAddSerializer
+
+    def post(self, request):
+        # is_superuser = request.user.is_superuser
+        # if not is_superuser:
+        #     return Response(
+        #         {
+        #             "result": False,
+        #             "errorCode": 3,
+        #             "errorMsg": "You don't have the permission."
+        #         },
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        agency = Agency()
+        agency.name = serializer.data.get('agency_name')
+        agency.api_username = serializer.data.get('api_username')
+        agency.api_password = serializer.data.get('api_password')
+        agency.save()
+        data_source = serializer.validated_data['data_source']
+        data_source.pcc = serializer.data.get('pcc')
+        data_source.agency = agency
+        data_source.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "msg": "agency created successfully."
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AgencyDetailView(GenericAPIView):
+    # authentication_classes = (TokenAuthentication,)
+    # permission_classes = ()
+    serializer_class = AgencySerializer
+
+    def get(self, request, pk):
+        serializer = self.get_serializer(data={"agency_id": pk})
+        serializer.is_valid(raise_exception=True)
+        agency = serializer.validated_data['agency']
+        data_array = DataSource.objects.filter(agency=agency)
+        data_source = []
+        for data in data_array:
+            data_source.append({
+                "supplier": data.provider,
+                "pcc": data.pcc
+            })
+
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "agency_id": agency.id,
+                    "agency_name": agency.name,
+                    "agency_api_username": agency.api_username,
+                    "agency_api_password": agency.api_password,
+                    "data_source": data_source
+                }
+            }
+        )
+
+    def delete(self, request, pk):
+        try:
+            is_agency_admin = Agency.objects.filter(admin=request.user).exists()
             is_permission = is_agency_admin | request.user.is_superuser
             if not is_permission:
                 return Response(
@@ -214,162 +368,49 @@ class TeamEditView(GenericAPIView):
                     },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            team.name = serializer.data.get('name')
-            team.agency = serializer.validated_data['agency']
-            team.admin = serializer.validated_data['admin']
-            team.common_parameters = serializer.validated_data['common_parameter']
-            team.save()
+            Team(id=pk).delete()
 
             return Response(
                 {
                     "result": True,
                     "data": {
-                        "Msg": "Team updated",
-                        "team_id": team.id,
-                        "team_name": team.name,
-                        "team_admin": team.admin.username,
-                        "team_agency": team.agency.name
+                        "msg": "Team removed successfully."
                     }
-                },
-                status=status.HTTP_201_CREATED
+                }
             )
         except ObjectDoesNotExist:
             return Response(
                 {
                     "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "team_id is invalid."
+                    "errorCode": 1,
+                    "errorMsg": "Invalid team id."
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
-class AgencyListView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
+class AgencyUpdateView(GenericAPIView):
+    serializer_class = AgencyUpdateSerializer
 
-    def get(self, request):
-        is_superuser = request.user.is_superuser
-        if not is_superuser:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        number_of_agencies = Agency.objects.all().count()
-        agency_list = Agency.objects.all()
-        agency_detail = []
-        for agency in agency_list:
-            number_of_teams = Team.objects.filter(agency=agency).count()
-            agency_detail.append({
-                "agency_name": agency.name,
-                "agency_admin": agency.admin.username,
-                "created_at": agency.created_at,
-                "number_of_teams": number_of_teams
-            })
-
-        return Response(
-            {
-                "result": True,
-                "data": {
-                    "superuser_name": request.user.username,
-                    "number_of_agencies": number_of_agencies,
-                    "agency_list": agency_detail
-                }
-            }
-        )
-
-
-class AgencyView(GenericAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
-    serializer_class = AgencySerializer
-
-    def post(self, request):
-        is_superuser = request.user.is_superuser
-        if not is_superuser:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    def put(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        agency = Agency()
-        agency.name = serializer.data.get('name')
-        agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
+        agency = serializer.validated_data['agency']
+        agency.name = serializer.data.get('agency_name')
         agency.api_username = serializer.data.get('api_username')
         agency.api_password = serializer.data.get('api_password')
-        agency.style_group = serializer.data.get('style_group')
-        agency.is_iframe = serializer.data.get('is_iframe')
-        agency.student_and_youth = serializer.data.get('student_and_youth')
-        agency.common_parameters = serializer.validated_data['common_parameter']
-        agency.admin = serializer.validated_data['admin']
         agency.save()
+        data_source = serializer.validated_data['data_source']
+        data_source.pcc = serializer.data.get('pcc')
+        data_source.agency = agency
+        data_source.save()
 
         return Response(
             {
                 "result": True,
                 "data": {
-                    "agency_id": agency.id,
-                    "agency_name": agency.name,
-                    "agency_admin": agency.admin.username
+                    "msg": "agency updated successfully."
                 }
             },
             status=status.HTTP_201_CREATED
         )
-
-    def put(self, request, pk):
-        try:
-            agency = Agency.objects.get(id=pk)
-            is_permission = request.user.is_superuser | Agency.objects.get(admin=request.user)
-            if not is_permission:
-                return Response(
-                    {
-                        "result": False,
-                        "errorCode": 3,
-                        "errorMsg": "You don't have the permission."
-                    },
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            agency.name = serializer.data.get('name')
-            agency.amadeus_branded_fares = serializer.data.get('amadeus_branded_fares')
-            agency.api_username = serializer.data.get('api_username')
-            agency.api_password = serializer.data.get('api_password')
-            agency.style_group = serializer.data.get('style_group')
-            agency.is_iframe = serializer.data.get('is_iframe')
-            agency.student_and_youth = serializer.data.get('student_and_youth')
-            agency.common_parameters = serializer.validated_data['common_parameter']
-            agency.admin = serializer.validated_data['admin']
-            agency.save()
-
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "agency_id": agency.id,
-                        "agency_name": agency.name,
-                        "agency_admin": agency.admin.username
-                    }
-                },
-                status=status.HTTP_201_CREATED
-            )
-        except ObjectDoesNotExist:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "agency_id is invalid."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )

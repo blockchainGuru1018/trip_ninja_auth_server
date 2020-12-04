@@ -14,7 +14,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
     password = serializers.CharField(required=False)
 
     default_error_messages = {
