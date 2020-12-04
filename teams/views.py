@@ -21,10 +21,10 @@ class AllTeamsView(GenericAPIView):
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
         if keyword:
-            allteams = Team.objects.filter(name__icontains=keyword)
+            allteams = Team.objects.filter(name__icontains=keyword).order_by('-id')
             number_of_team = Team.objects.filter(name__icontains=keyword).count()
         else:
-            allteams = Team.objects.all()
+            allteams = Team.objects.all().order_by('-id')
             number_of_team = Team.objects.all().count()
         paginator = Paginator(allteams, number_per_page)
         try:
@@ -177,7 +177,7 @@ class AddTeamView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team = Team()
-        team.name = serializer.data.get('name')
+        team.name = serializer.data.get('team_name')
         team.admin = serializer.validated_data['admin']
         team.is_booking = serializer.validated_data['is_booking']
         team.save()
@@ -229,10 +229,10 @@ class AllAgencyView(GenericAPIView):
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
         if keyword:
-            allagencies = Agency.objects.filter(name__icontains=keyword)
+            allagencies = Agency.objects.filter(name__icontains=keyword).order_by('-id')
             number_of_agency = Agency.objects.filter(name__icontains=keyword).count()
         else:
-            allagencies = Agency.objects.all()
+            allagencies = Agency.objects.all().order_by('-id')
             number_of_agency = Agency.objects.all().count()
         paginator = Paginator(allagencies, number_per_page)
         try:

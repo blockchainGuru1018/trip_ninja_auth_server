@@ -85,10 +85,10 @@ class SearchDetailView(GenericAPIView):
         sort_by = request.GET.get('sort_by')
         sort_order = request.GET.get('sort_order')
         if keyword:
-            allusers = User.objects.filter(username__icontains=keyword)
+            allusers = User.objects.filter(username__icontains=keyword).order_by('-id')
             number_of_active_users = User.objects.filter(username__icontains=keyword).count()
         else:
-            allusers = User.objects.all()
+            allusers = User.objects.all().order_by('-id').order_by('-id')
             number_of_active_users = User.objects.all().count()
         paginator = Paginator(allusers, number_per_page)
         try:
