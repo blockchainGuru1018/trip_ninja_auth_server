@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+from django.db.models import Q
 
 from common.serializers import serialize_team, serialize_agency
 from teams.models import Team, Agency, DataSource
@@ -244,11 +245,22 @@ class AllAgencyView(GenericAPIView):
         for sea in search:
             teams = Team.objects.filter(agency=sea)
             number_of_users = 0
+            data_source = DataSource.objects.filter(agency=sea)
+            data = []
+            for item in data_source:
+                data.append({
+                    "id": item.id,
+                    "pcc": item.pcc,
+                    "provider": item.provider
+                })
             for team in teams:
                 number_of_users = number_of_users + User.objects.filter(team=team).count()
             sea_agency.append({
                 **serialize_agency(sea),
                 "number_of_users": number_of_users,
+                "api_username": sea.api_username,
+                "api_password": sea.api_password,
+                "data_source": data
             })
 
         return Response(
@@ -329,7 +341,15 @@ class AddAgencyView(GenericAPIView):
             {
                 "result": True,
                 "data": {
-                    "msg": "agency created successfully."
+                    "agency": {
+                        "agency_id": agency.id,
+                        "agency_name": agency.name,
+                        "status": True,
+                        "number_of_users": 0,
+                        "api_username": agency.api_username,
+                        "api_password": agency.api_password,
+                        "data_source": data_source
+                    }
                 }
             },
             status=status.HTTP_201_CREATED
@@ -353,7 +373,6 @@ class AgencyDetailView(GenericAPIView):
                 "supplier": data.provider,
                 "pcc": data.pcc
             })
-
 
         return Response(
             {
@@ -437,7 +456,15 @@ class AgencyUpdateView(GenericAPIView):
             {
                 "result": True,
                 "data": {
-                    "msg": "agency updated successfully."
+                    "agency": {
+                        "agency_id": agency.id,
+                        "agency_name": agency.name,
+                        "status": True,
+                        "number_of_users": 0,
+                        "api_username": agency.api_username,
+                        "api_password": agency.api_password,
+                        "data_source": data_source
+                    }
                 }
             },
             status=status.HTTP_201_CREATED
@@ -481,13 +508,36 @@ class DataSourceView(GenericAPIView):
             data_source_detail.append({
                 "id": data.id,
                 "provider": data.provider,
-                "ppc": data.pcc
+                "pcc": data.pcc
             })
         return Response(
             {
                 "result": True,
                 "data": {
                     "data_source": data_source_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AvailableDataSourceView(GenericAPIView):
+
+    def get(self, request, pk):
+        agency = Agency.objects.get(id=pk)
+        data_list = DataSource.objects.filter(Q(agency=agency) | Q(agency=None))
+        data_detail = []
+        for item in data_list:
+            data_detail.append({
+                "id": item.id,
+                "pcc": item.pcc,
+                "provider": item.provider
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "data_source": data_detail
                 }
             },
             status=status.HTTP_201_CREATED
