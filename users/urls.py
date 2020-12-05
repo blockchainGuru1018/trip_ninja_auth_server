@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import UserDetailView, SearchDetailView, AddUserView, AllUsersListView, BulkAddUserView,\
-    EmailCheckView, UserUpdateView
+    EmailCheckView, UserUpdateView, UserAchieveView
 
 app_name = 'users'
 
@@ -13,4 +13,5 @@ urlpatterns = [
 
     path('<int:pk>/', UserDetailView.as_view()),
     path('update/', UserUpdateView.as_view()),
+    path('<int:pk>/archive/', UserAchieveView.as_view()),
 ]

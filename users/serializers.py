@@ -95,6 +95,7 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False)
+    team_id = serializers.IntegerField(required=False)
     username = serializers.CharField(required=False)
     email = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
@@ -102,6 +103,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     default_error_messages = {
         'invalid_user_id': _('user_id is invalid.'),
+        'invalid_team_id': _('team_id is invalid.'),
         'invalid_username': _('username is invalid.'),
         'invalid_email': _('email is invalid.'),
         'invalid_phone_number': _('phone_number is invalid.'),
@@ -110,28 +112,25 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("user_id", "username", "email", "phone_number", "is_active")
+        fields = ("user_id", "team_id", "username", "email", "phone_number", "is_active")
 
     def validate(self, attrs):
         user_id = attrs.get("user_id")
         is_active = attrs.get("is_active")
         username = attrs.get("username")
         email = attrs.get("email")
-        phone_number = attrs.get("phone_number")
 
         if user_id is None:
             raise CustomException(code=10, message=self.error_messages['invalid_user_id'])
         if is_active is None:
-            raise CustomException(code=11, message=self.error_messages['invalid_is_active'])
+            raise CustomException(code=12, message=self.error_messages['invalid_is_active'])
         if username is None:
-            raise CustomException(code=12, message=self.error_messages['invalid_username'])
+            raise CustomException(code=13, message=self.error_messages['invalid_username'])
         if email is None:
-            raise CustomException(code=13, message=self.error_messages['invalid_email'])
-        if phone_number is None:
-            raise CustomException(code=14, message=self.error_messages['invalid_phone_number'])
+            raise CustomException(code=14, message=self.error_messages['invalid_email'])
 
         try:
             attrs['user'] = User.objects.get(id=user_id)
             return attrs
         except ObjectDoesNotExist:
-            raise CustomException(code=10, message=self.error_messages['invalid_user_id'])
+            raise CustomException(code=15, message=self.error_messages['invalid_user_id'])

@@ -21,9 +21,11 @@ class UserDetailView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         if user.team is None:
-            team = None
+            team_name = None
+            team_id = None
         else:
-            team = user.team.name
+            team_name = user.team.name
+            team_id = user.team.id
         return Response(
             {
                 "result": True,
@@ -32,9 +34,10 @@ class UserDetailView(GenericAPIView):
                         **serialize_user(user),
                         "email": user.email,
                         "phone_number": user.phone_number,
-                        "is_active": user.is_active,
-                        "team_name": team,
-                        "role": "agent"
+                        "status": user.is_active,
+                        "team_id": team_id,
+                        "team_name": team_name,
+                        "role": "Team Lead"
                     }
                 },
             },
@@ -101,14 +104,18 @@ class SearchDetailView(GenericAPIView):
         sea_users = []
         for sea in search:
             if sea.team is None:
-                team = "None"
+                team_name = None
+                team_id = None
             else:
-                team = sea.team.name
+                team_name = sea.team.name
+                team_id = sea.team.id
             sea_users.append({
                 **serialize_user(sea),
                 "email": sea.email,
-                "team": team,
-                "status": sea.is_active,
+                "phone_number": sea.phone_number,
+                "team_id": team_id,
+                "team_name": team_name,
+                "is_active": sea.is_active,
                 "role": "Team Lead"
             })
         return Response(
@@ -268,20 +275,66 @@ class UserUpdateView(GenericAPIView):
     serializer_class = UserUpdateSerializer
 
     def put(self, request):
+        team_id = team_name = None
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         user.username = serializer.data.get('username')
         user.email = serializer.data.get('email')
-        user.phone_number = serializer.data.get('phone_number')
+        if serializer.data.get('phone_number'):
+            user.phone_number = serializer.data.get('phone_number')
         user.is_active = serializer.data.get('is_active')
+        if serializer.data.get('team_id'):
+            user.team = Team.objects.get(id=serializer.data.get('team_id'))
+            team_id = user.team.id
+            team_name = user.team.name
         user.save()
+        if not user.team:
+            team_id = None
+            team_name = None
+
         return Response(
             {
                 "result": True,
                 "data": {
-                    "msg": "user updated successfully."
+                    "user": {
+                        **serialize_user(user),
+                        "email": user.email,
+                        "phone_number": user.phone_number,
+                        "is_active": user.is_active,
+                        "team_id": team_id,
+                        "team_name": team_name,
+                        "role": "Team Lead"
+                    }
                 }
             },
             status=status.HTTP_201_CREATED
         )
+
+
+class UserAchieveView(GenericAPIView):
+
+    def get(self, request, pk):
+        try:
+            user = User.objects.get(id=pk)
+            if user.is_active:
+                user.is_active = False
+            else:
+                user.is_active = True
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "msg": "User archived."
+                    },
+                },
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {
+                    "result": False,
+                    "data": {
+                        "msg": "User archive failed."
+                    },
+                },
+            )
