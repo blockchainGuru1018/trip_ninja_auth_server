@@ -444,3 +444,25 @@ class AgencyUpdateView(GenericAPIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+
+class DataSourceView(GenericAPIView):
+
+    def get(self, request):
+        data_source = DataSource.objects.filter(agency=None)
+        data_source_detail = []
+        for data in data_source:
+            data_source_detail.append({
+                "id": data.id,
+                "provider": data.provider,
+                "ppc": data.pcc
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "data_source": data_source_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )

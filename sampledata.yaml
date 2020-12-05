@@ -77,3 +77,23 @@
     agency: 1
     common_parameters: 1
     admin: 2
+
+- model: teams.DataSource
+  pk: 1
+  fields:
+    provide: 1A
+
+- model: teams.DataSource
+  pk: 2
+  fields:
+    provide: 1V
+
+- model: teams.DataSource
+  pk: 3
+  fields:
+    provide: 1G
+
+- model: teams.DataSource
+  pk: 4
+  fields:
+    provide: 1P
