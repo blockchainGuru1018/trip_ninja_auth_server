@@ -37,9 +37,13 @@ class AllTeamsView(GenericAPIView):
         sea_teams = []
         for sea in search:
             number_of_users = User.objects.filter(team=sea).count()
+            members = User.objects.filter(team=sea).values_list("id", flat=True)
             sea_teams.append({
                 **serialize_team(sea),
-                "number_of_users": number_of_users,
+                "leader_id": sea.admin.id,
+                "is_booking": sea.is_booking,
+                "members": members,
+                "number_of_users": number_of_users
             })
         return Response(
             {
@@ -143,14 +147,23 @@ class TeamUpdateView(GenericAPIView):
         team.save()
         members = serializer.data.get('members')
         if members:
-            User.objects.filter(team=team).update(team=None)
-            User.objects.filter(id__in=members).update(team=team)
+            User.objects.filter(team=team).update(team=None, is_agent=True)
+            User.objects.filter(id__in=members).update(team=team, is_agent=False)
+        number_of_users = User.objects.filter(id__in=members).count()
 
         return Response(
             {
                 "result": True,
                 "data": {
-                    "msg": "team updated successfully."
+                    "teams": {
+                        "team_id": team.id,
+                        "team_name": team.name,
+                        "team_leader": team.admin.username,
+                        "leader_id": team.admin.id,
+                        "is_booking": team.is_booking,
+                        "members": members,
+                        "number_of_users": number_of_users
+                    }
                 }
             },
             status=status.HTTP_201_CREATED
@@ -183,22 +196,7 @@ class AddTeamView(GenericAPIView):
         team.save()
         members = serializer.data.get('members')
         if members:
-            for member in members:
-                try:
-                    agent = User.objects.get(id=member)
-                    agent.team = team
-                    agent.is_agent = False
-                    agent.save()
-                except ObjectDoesNotExist:
-                    return Response(
-                        {
-                            "result": False,
-                            "data": {
-                                "msg": "members are invalid"
-                            }
-                        }
-                    )
-
+            User.objects.filter(id__in=members).update(team=team, is_agent=False)
         return Response(
             {
                 "result": True,
@@ -444,6 +442,34 @@ class AgencyUpdateView(GenericAPIView):
             },
             status=status.HTTP_201_CREATED
         )
+
+
+class TeamAchieveView(GenericAPIView):
+
+    def get(self, request, pk):
+        try:
+            user = Team.objects.get(id=pk)
+            if user.is_booking:
+                user.is_booking = False
+            else:
+                user.is_booking = True
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "msg": "Team archived."
+                    },
+                },
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {
+                    "result": False,
+                    "data": {
+                        "msg": "Team archive failed."
+                    },
+                },
+            )
 
 
 class DataSourceView(GenericAPIView):

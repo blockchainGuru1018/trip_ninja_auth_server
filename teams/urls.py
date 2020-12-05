@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import AllTeamsView, TeamDetailView, AddTeamView, AllAgencyView, AddAgencyView, AllTeamsListView, \
-    AgencyListView, TeamUpdateView, AgencyDetailView, AgencyUpdateView, DataSourceView
+    AgencyListView, TeamUpdateView, AgencyDetailView, AgencyUpdateView, DataSourceView, TeamAchieveView
 
 app_name = 'teams'
 
@@ -11,6 +11,7 @@ urlpatterns = [
     path('add/', AddTeamView.as_view()),
     path('<int:pk>/', TeamDetailView.as_view()),
     path('update/', TeamUpdateView.as_view()),
+    path('<int:pk>/archive/', TeamAchieveView.as_view()),
 
     path('agency/search/', AllAgencyView.as_view()),
     path('agency/list/', AgencyListView.as_view()),

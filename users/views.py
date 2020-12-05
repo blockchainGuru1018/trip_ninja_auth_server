@@ -4,6 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Q
 
 from teams.models import Team, Agency
 from users.models import User
@@ -173,6 +174,27 @@ class AllUsersListView(GenericAPIView):
 
     def get(self, request):
         user_list = User.objects.filter(is_agent=True)
+        user_detail = []
+        for user in user_list:
+            user_detail.append({
+                **serialize_user(user)
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "users": user_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AvailableUsersListView(GenericAPIView):
+
+    def get(self, request, pk):
+        team = Team.objects.get(id=pk)
+        user_list = User.objects.filter(Q(is_agent=True) | Q(team=team))
         user_detail = []
         for user in user_list:
             user_detail.append({
