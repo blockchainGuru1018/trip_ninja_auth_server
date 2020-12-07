@@ -11,6 +11,28 @@ from common.serializers import IsSuperUser, serialize_user
 from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer
 
 
+class BasicInfoView(GenericAPIView):
+    permission_classes = IsSuperUser,
+
+    def get(self, request):
+        user = request.user
+        common_parameter = user.common_parameters
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "user_info": {
+                        "name": user.username,
+                        "phone_number": user.phone_number,
+                        "email_address": user.email,
+                        "currency": common_parameter.currency,
+                        "date_type": common_parameter.date_type
+                    }
+                }
+            }
+        )
+
+
 class UserDetailView(GenericAPIView):
     permission_classes = IsSuperUser,
     serializer_class = GetUserByIdSerializer
