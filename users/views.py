@@ -45,17 +45,6 @@ class UserDetailView(GenericAPIView):
 
     def delete(self, request, pk):
         try:
-            # is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-            # is_permission = is_agency_admin | request.user.is_superuser
-            # if not is_permission:
-            #     return Response(
-            #         {
-            #             "result": False,
-            #             "errorCode": 3,
-            #             "errorMsg": "You don't have the permission."
-            #         },
-            #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            #     )
             User.objects.get(id=pk).delete()
 
             return Response(
@@ -81,15 +70,6 @@ class SearchDetailView(GenericAPIView):
     permission_classes = IsSuperUser,
 
     def get(self, request):
-        if not request.user.is_superuser:
-            return Response(
-                {
-                    "result": False,
-                    "errorCode": 3,
-                    "errorMsg": "You don't have the permission."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
         keyword = request.GET.get('keyword')
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
@@ -143,17 +123,6 @@ class AddUserView(GenericAPIView):
     serializer_class = SingleAddUserSerializer
 
     def post(self, request):
-        # is_possible = Agency.objects.filter(admin=request.user) | Team.objects.filter(admin=request.user) | \
-        #               request.user.is_superuser
-        # if not is_possible:
-        #     return Response(
-        #         {
-        #             "result": False,
-        #             "errorCode": 3,
-        #             "errorMsg": "You don't have the permission."
-        #         },
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = User()
@@ -224,17 +193,6 @@ class BulkAddUserView(GenericAPIView):
     serializer_class = BulkAddUserSerializer
 
     def post(self, request):
-        # is_possible = Agency.objects.filter(admin=request.user) | Team.objects.filter(admin=request.user) | \
-        #               request.user.is_superuser
-        # if not is_possible:
-        #     return Response(
-        #         {
-        #             "result": False,
-        #             "errorCode": 3,
-        #             "errorMsg": "You don't have the permission."
-        #         },
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         emails = serializer.data.get('emails')

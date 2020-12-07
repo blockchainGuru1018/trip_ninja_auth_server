@@ -175,17 +175,6 @@ class AddTeamView(GenericAPIView):
     serializer_class = TeamCreateSerializer
 
     def post(self, request):
-        # is_agency_admin = Agency.objects.filter(admin=request.user).exists()
-        # is_permission = is_agency_admin | request.user.is_superuser
-        # if not is_permission:
-        #     return Response(
-        #         {
-        #             "result": False,
-        #             "errorCode": 3,
-        #             "errorMsg": "You don't have the permission."
-        #         },
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team = Team()
@@ -211,16 +200,6 @@ class AllAgencyView(GenericAPIView):
     permission_classes = IsSuperUser,
 
     def get(self, request):
-        # is_superuser = request.user.is_superuser
-        # if not is_superuser:
-        #     return Response(
-        #         {
-        #             "result": False,
-        #             "errorCode": 3,
-        #             "errorMsg": "You don't have the permission."
-        #         },
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
         keyword = request.GET.get('keyword')
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
@@ -298,16 +277,6 @@ class AddAgencyView(GenericAPIView):
     serializer_class = AgencyAddSerializer
 
     def post(self, request):
-        # is_superuser = request.user.is_superuser
-        # if not is_superuser:
-        #     return Response(
-        #         {
-        #             "result": False,
-        #             "errorCode": 3,
-        #             "errorMsg": "You don't have the permission."
-        #         },
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         agency = Agency()
