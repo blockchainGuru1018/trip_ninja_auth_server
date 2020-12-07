@@ -1,12 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from django.db.models import Q
 
-from common.serializers import serialize_team, serialize_agency
+from common.serializers import IsSuperUser, serialize_team, serialize_agency
 from teams.models import Team, Agency, DataSource
 from users.models import User
 from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer, TeamUpdateSerializer, \
@@ -14,8 +13,7 @@ from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer,
 
 
 class AllTeamsView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         keyword = request.GET.get('keyword')
@@ -59,6 +57,7 @@ class AllTeamsView(GenericAPIView):
 
 
 class AllTeamsListView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         team_list = Team.objects.all()
@@ -79,8 +78,7 @@ class AllTeamsListView(GenericAPIView):
 
 
 class TeamDetailView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = TeamSerializer
 
     def get(self, request, pk):
@@ -136,6 +134,7 @@ class TeamDetailView(GenericAPIView):
 
 
 class TeamUpdateView(GenericAPIView):
+    permission_classes = IsSuperUser,
     serializer_class = TeamUpdateSerializer
 
     def put(self, request):
@@ -172,8 +171,7 @@ class TeamUpdateView(GenericAPIView):
 
 
 class AddTeamView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = TeamCreateSerializer
 
     def post(self, request):
@@ -210,8 +208,7 @@ class AddTeamView(GenericAPIView):
 
 
 class AllAgencyView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         # is_superuser = request.user.is_superuser
@@ -276,6 +273,7 @@ class AllAgencyView(GenericAPIView):
 
 
 class AgencyListView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         agency_list = Agency.objects.all()
@@ -296,8 +294,7 @@ class AgencyListView(GenericAPIView):
 
 
 class AddAgencyView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = AgencyAddSerializer
 
     def post(self, request):
@@ -357,8 +354,7 @@ class AddAgencyView(GenericAPIView):
 
 
 class AgencyDetailView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = AgencySerializer
 
     def get(self, request, pk):
@@ -422,6 +418,7 @@ class AgencyDetailView(GenericAPIView):
 
 
 class AgencyUpdateView(GenericAPIView):
+    permission_classes = IsSuperUser,
     serializer_class = AgencyUpdateSerializer
 
     def put(self, request):
@@ -472,6 +469,7 @@ class AgencyUpdateView(GenericAPIView):
 
 
 class TeamAchieveView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request, pk):
         try:
@@ -500,6 +498,7 @@ class TeamAchieveView(GenericAPIView):
 
 
 class DataSourceView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         data_source = DataSource.objects.filter(agency=None)
@@ -522,6 +521,7 @@ class DataSourceView(GenericAPIView):
 
 
 class AvailableDataSourceView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request, pk):
         agency = Agency.objects.get(id=pk)

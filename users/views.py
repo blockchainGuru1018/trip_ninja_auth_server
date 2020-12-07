@@ -1,20 +1,18 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.generics import GenericAPIView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
 
 from teams.models import Team, Agency
 from users.models import User
-from common.serializers import serialize_user
+from common.serializers import IsSuperUser, serialize_user
 from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer
 
 
 class UserDetailView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = GetUserByIdSerializer
 
     def get(self, request, pk):
@@ -80,9 +78,18 @@ class UserDetailView(GenericAPIView):
 
 
 class SearchDetailView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
+    permission_classes = IsSuperUser,
 
     def get(self, request):
+        if not request.user.is_superuser:
+            return Response(
+                {
+                    "result": False,
+                    "errorCode": 3,
+                    "errorMsg": "You don't have the permission."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         keyword = request.GET.get('keyword')
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
@@ -132,8 +139,7 @@ class SearchDetailView(GenericAPIView):
 
 
 class AddUserView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = SingleAddUserSerializer
 
     def post(self, request):
@@ -171,6 +177,7 @@ class AddUserView(GenericAPIView):
 
 
 class AllUsersListView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         user_list = User.objects.filter(is_agent=True)
@@ -191,6 +198,7 @@ class AllUsersListView(GenericAPIView):
 
 
 class AvailableUsersListView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request, pk):
         team = Team.objects.get(id=pk)
@@ -212,8 +220,7 @@ class AvailableUsersListView(GenericAPIView):
 
 
 class BulkAddUserView(GenericAPIView):
-    # authentication_classes = (TokenAuthentication,)
-    # permission_classes = ()
+    permission_classes = IsSuperUser,
     serializer_class = BulkAddUserSerializer
 
     def post(self, request):
@@ -277,6 +284,7 @@ class BulkAddUserView(GenericAPIView):
 
 
 class EmailCheckView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request):
         email = request.GET.get('email')
@@ -294,6 +302,7 @@ class EmailCheckView(GenericAPIView):
 
 
 class UserUpdateView(GenericAPIView):
+    permission_classes = IsSuperUser,
     serializer_class = UserUpdateSerializer
 
     def put(self, request):
@@ -335,6 +344,7 @@ class UserUpdateView(GenericAPIView):
 
 
 class UserAchieveView(GenericAPIView):
+    permission_classes = IsSuperUser,
 
     def get(self, request, pk):
         try:

@@ -1,6 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_auth.views import LoginView, LogoutView
@@ -34,8 +33,6 @@ class UserLoginView(LoginView):
 
 
 class UserRegistrationView(CreateAPIView):
-    authentication_classes = ()
-    permission_classes = ()
     serializer_class = RegistrationSerializer
 
     def create(self, request, *args, **kwargs):
@@ -54,8 +51,6 @@ class UserLogoutView(LogoutView):
 
 
 class ForgotPasswordView(CreateAPIView):
-    authentication_classes = ()
-    permission_classes = ()
     serializer_class = ForgotSerializer
 
     def create(self, request, *args, **kwargs):
@@ -83,8 +78,6 @@ class ForgotPasswordView(CreateAPIView):
 
 
 class ConfirmTokenView(CreateAPIView):
-    authentication_classes = ()
-    permission_classes = ()
     serializer_class = ConfirmTokenSerializer
 
     def create(self, request, *args, **kwargs):
@@ -99,8 +92,6 @@ class ConfirmTokenView(CreateAPIView):
 
 
 class ResetPasswordView(CreateAPIView):
-    authentication_classes = ()
-    permission_classes = ()
     serializer_class = ResetPasswordSerializer
 
     def create(self, request, *args, **kwargs):
@@ -116,8 +107,6 @@ class ResetPasswordView(CreateAPIView):
 
 
 class ChangePasswordView(CreateAPIView):
-    authentication_classes = (TokenAuthentication,)
-    permission_classes = ()
     serializer_class = ChangePasswordSerializer
 
     def create(self, request, *args, **kwargs):
