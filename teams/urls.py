@@ -1,12 +1,13 @@
 from django.urls import path
 
-from .views import AllTeamsView, TeamDetailView, AddTeamView, AllAgencyView, AddAgencyView, AllTeamsListView, \
+from .views import NameCheckView, AllTeamsView, TeamDetailView, AddTeamView, AllAgencyView, AddAgencyView, AllTeamsListView, \
     AgencyListView, TeamUpdateView, AgencyDetailView, AgencyUpdateView, DataSourceView, TeamAchieveView, \
     AvailableDataSourceView
 
 app_name = 'teams'
 
 urlpatterns = [
+    path('name-check/', NameCheckView.as_view()),
     path('search/', AllTeamsView.as_view()),
     path('list/', AllTeamsListView.as_view()),
     path('add/', AddTeamView.as_view()),

@@ -12,6 +12,24 @@ from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer,
     AgencyAddSerializer, AgencyUpdateSerializer
 
 
+class NameCheckView(GenericAPIView):
+    permission_classes = IsSuperUser,
+
+    def get(self, request):
+        team_name = request.GET.get('team_name')
+        if Team.objects.filter(name=team_name).exists():
+            return Response(
+                {
+                    "result": False,
+                    "data": {
+                        "msg": "Team name already exists."
+                    },
+                },
+            )
+
+        return Response({"result": True})
+
+
 class AllTeamsView(GenericAPIView):
     permission_classes = IsSuperUser,
 
