@@ -1,8 +1,8 @@
 - model: common.CommonParameters
   pk: 1
   fields:
-    currency: UK
-    date_type: date
+    currency: CAD
+    date_type: dd/mm/yyyy
     booking_enabled: true
     virtual_interlining: true
     exclude_carriers: 1
@@ -11,7 +11,7 @@
   pk: 2
   fields:
     currency: USA
-    date_type: date
+    date_type: mm/dd/yyyy
     booking_enabled: true
     virtual_interlining: true
     exclude_carriers: 2
@@ -50,7 +50,7 @@
 
     is_active: true
     is_superuser: false
-      is_agent: true
+    is_agent: true
     is_team_lead: true
     is_agency_admin: true
 
