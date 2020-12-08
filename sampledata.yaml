@@ -31,7 +31,7 @@
 
     is_active: true
     is_superuser: true
-    is_agent: false
+    is_agent: true
     is_team_lead: false
     is_agency_admin: false
 
@@ -50,7 +50,7 @@
 
     is_active: true
     is_superuser: false
-    is_agent: false
+      is_agent: true
     is_team_lead: true
     is_agency_admin: true
 
