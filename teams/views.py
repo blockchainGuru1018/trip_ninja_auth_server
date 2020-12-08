@@ -5,7 +5,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from django.db.models import Q
 
-from common.serializers import IsSuperUser, serialize_team, serialize_agency
+from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_team, serialize_agency
 from teams.models import Team, Agency, DataSource
 from users.models import User
 from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer, TeamUpdateSerializer, \
@@ -13,7 +13,7 @@ from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer,
 
 
 class NameCheckView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
 
     def get(self, request):
         team_name = request.GET.get('team_name')
@@ -31,7 +31,7 @@ class NameCheckView(GenericAPIView):
 
 
 class AllTeamsView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request):
         keyword = request.GET.get('keyword')
@@ -75,7 +75,7 @@ class AllTeamsView(GenericAPIView):
 
 
 class AllTeamsListView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request):
         team_list = Team.objects.all()
@@ -96,7 +96,7 @@ class AllTeamsListView(GenericAPIView):
 
 
 class TeamDetailView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
     serializer_class = TeamSerializer
 
     def get(self, request, pk):
@@ -152,7 +152,7 @@ class TeamDetailView(GenericAPIView):
 
 
 class TeamUpdateView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
     serializer_class = TeamUpdateSerializer
 
     def put(self, request):
@@ -189,7 +189,7 @@ class TeamUpdateView(GenericAPIView):
 
 
 class AddTeamView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
     serializer_class = TeamCreateSerializer
 
     def post(self, request):
@@ -341,7 +341,7 @@ class AddAgencyView(GenericAPIView):
 
 
 class AgencyDetailView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
     serializer_class = AgencySerializer
 
     def get(self, request, pk):
@@ -405,7 +405,7 @@ class AgencyDetailView(GenericAPIView):
 
 
 class AgencyUpdateView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
     serializer_class = AgencyUpdateSerializer
 
     def put(self, request):
@@ -455,16 +455,49 @@ class AgencyUpdateView(GenericAPIView):
         )
 
 
-class TeamAchieveView(GenericAPIView):
+class AgencyAchieveView(GenericAPIView):
     permission_classes = IsSuperUser,
 
     def get(self, request, pk):
         try:
-            user = Team.objects.get(id=pk)
-            if user.is_booking:
-                user.is_booking = False
+            agency = Agency.objects.get(id=pk)
+            if agency.is_active:
+                agency.is_active = False
+                agency.save()
             else:
-                user.is_booking = True
+                agency.is_active = True
+                agency.save()
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "msg": "Agency archived."
+                    },
+                },
+            )
+        except ObjectDoesNotExist:
+            return Response(
+                {
+                    "result": False,
+                    "data": {
+                        "msg": "Agency archive failed."
+                    },
+                },
+            )
+
+
+class TeamAchieveView(GenericAPIView):
+    permission_classes = IsAgencyAdmin,
+
+    def get(self, request, pk):
+        try:
+            team = Team.objects.get(id=pk)
+            if team.is_active:
+                team.is_active = False
+                team.save()
+            else:
+                team.is_active = True
+                team.save()
             return Response(
                 {
                     "result": True,
@@ -485,7 +518,7 @@ class TeamAchieveView(GenericAPIView):
 
 
 class DataSourceView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request):
         data_source = DataSource.objects.filter(agency=None)
@@ -508,7 +541,7 @@ class DataSourceView(GenericAPIView):
 
 
 class AvailableDataSourceView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request, pk):
         agency = Agency.objects.get(id=pk)

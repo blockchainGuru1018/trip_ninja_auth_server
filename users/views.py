@@ -7,12 +7,11 @@ from django.db.models import Q
 
 from teams.models import Team, Agency
 from users.models import User
-from common.serializers import IsSuperUser, serialize_user
+from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_user
 from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer
 
 
 class BasicInfoView(GenericAPIView):
-    permission_classes = IsSuperUser,
 
     def get(self, request):
         user = request.user
@@ -34,7 +33,6 @@ class BasicInfoView(GenericAPIView):
 
 
 class UserDetailView(GenericAPIView):
-    permission_classes = IsSuperUser,
     serializer_class = GetUserByIdSerializer
 
     def get(self, request, pk):
@@ -89,7 +87,7 @@ class UserDetailView(GenericAPIView):
 
 
 class SearchDetailView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
 
     def get(self, request):
         keyword = request.GET.get('keyword')
@@ -141,7 +139,7 @@ class SearchDetailView(GenericAPIView):
 
 
 class AddUserView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
     serializer_class = SingleAddUserSerializer
 
     def post(self, request):
@@ -168,7 +166,7 @@ class AddUserView(GenericAPIView):
 
 
 class AllUsersListView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
 
     def get(self, request):
         user_list = User.objects.filter(is_agent=True)
@@ -189,7 +187,7 @@ class AllUsersListView(GenericAPIView):
 
 
 class AvailableUsersListView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
 
     def get(self, request, pk):
         team = Team.objects.get(id=pk)
@@ -211,7 +209,7 @@ class AvailableUsersListView(GenericAPIView):
 
 
 class BulkAddUserView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
     serializer_class = BulkAddUserSerializer
 
     def post(self, request):
@@ -264,7 +262,6 @@ class BulkAddUserView(GenericAPIView):
 
 
 class EmailCheckView(GenericAPIView):
-    permission_classes = IsSuperUser,
 
     def get(self, request):
         email = request.GET.get('email')
@@ -282,7 +279,6 @@ class EmailCheckView(GenericAPIView):
 
 
 class UserUpdateView(GenericAPIView):
-    permission_classes = IsSuperUser,
     serializer_class = UserUpdateSerializer
 
     def put(self, request):
@@ -324,15 +320,17 @@ class UserUpdateView(GenericAPIView):
 
 
 class UserAchieveView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsTeamLead,
 
     def get(self, request, pk):
         try:
             user = User.objects.get(id=pk)
             if user.is_active:
                 user.is_active = False
+                user.save()
             else:
                 user.is_active = True
+                user.save()
             return Response(
                 {
                     "result": True,
