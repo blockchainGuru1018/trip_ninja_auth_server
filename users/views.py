@@ -8,10 +8,12 @@ from django.db.models import Q
 from teams.models import Team, Agency
 from users.models import User
 from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_user
-from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer
+from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer,\
+    BasicInfoSerializer
 
 
 class BasicInfoView(GenericAPIView):
+    serializer_class = BasicInfoSerializer
 
     def get(self, request):
         user = request.user
@@ -26,6 +28,39 @@ class BasicInfoView(GenericAPIView):
                         "email_address": user.email,
                         "currency": common_parameter.currency,
                         "date_type": common_parameter.date_type
+                    }
+                }
+            }
+        )
+
+    def put(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        name = serializer.data.get('name')
+        phone_number = serializer.data.get('phone_number')
+        email_address = serializer.data.get('email_address')
+        currency = serializer.data.get('currency')
+        date_type = serializer.data.get('date_type')
+        print(name, phone_number, email_address, currency, date_type)
+        user = request.user
+        user.username = name
+        user.phone_number = phone_number
+        user.email = email_address
+        user.save()
+        user.common_parameters.currency = currency
+        user.common_parameters.date_type = date_type
+        user.common_parameters.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "user_info": {
+                        "name": user.username,
+                        "phone_number": user.phone_number,
+                        "email_address": user.email,
+                        "currency": user.common_parameters.currency,
+                        "date_type": user.common_parameters.date_type
                     }
                 }
             }

@@ -134,3 +134,43 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             return attrs
         except ObjectDoesNotExist:
             raise CustomException(code=15, message=self.error_messages['invalid_user_id'])
+
+
+class BasicInfoSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    phone_number = serializers.CharField(required=True)
+    email_address = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    date_type = serializers.CharField(required=False)
+
+    default_error_messages = {
+        'invalid_name': _('name is invalid.'),
+        'invalid_phone_number': _('phone_number is invalid.'),
+        'invalid_email_address': _('email_address is invalid.'),
+        'invalid_currency': _('currency is invalid.'),
+        'invalid_date_type': _('date_type is invalid.'),
+    }
+
+    class Meta:
+        model = Team
+        fields = ("name", "phone_number", "email_address", "currency", "date_type")
+
+    def validate(self, attrs):
+        name = attrs.get("name")
+        phone_number = attrs.get("phone_number")
+        email_address = attrs.get("email_address")
+        currency = attrs.get("currency")
+        date_type = attrs.get("date_type")
+
+        if not name:
+            raise CustomException(code=10, message=self.error_messages['invalid_name'])
+        if not phone_number:
+            raise CustomException(code=11, message=self.error_messages['invalid_phone_number'])
+        if not email_address:
+            raise CustomException(code=12, message=self.error_messages['invalid_email_address'])
+        if not currency:
+            raise CustomException(code=13, message=self.error_messages['invalid_currency'])
+        if not date_type:
+            raise CustomException(code=14, message=self.error_messages['invalid_date_type'])
+
+        return attrs
