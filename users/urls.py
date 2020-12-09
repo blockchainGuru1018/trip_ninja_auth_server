@@ -1,11 +1,12 @@
 from django.urls import path
 from .views import BasicInfoView, UserDetailView, SearchDetailView, AddUserView, AllUsersListView, BulkAddUserView,\
-    EmailCheckView, UserUpdateView, UserAchieveView, AvailableUsersListView
+    EmailCheckView, UserUpdateView, UserAchieveView, AvailableUsersListView, GeneralInfoView
 
 app_name = 'users'
 
 urlpatterns = [
     path('basic/', BasicInfoView.as_view()),
+    path('general/', GeneralInfoView.as_view()),
     path('search/', SearchDetailView.as_view()),
     path('list/', AllUsersListView.as_view()),
     path('list/<int:pk>/', AvailableUsersListView.as_view()),

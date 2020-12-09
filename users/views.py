@@ -9,7 +9,7 @@ from teams.models import Team, Agency
 from users.models import User
 from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_user
 from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer,\
-    BasicInfoSerializer
+    BasicInfoSerializer, GeneralInfoSerializer
 
 
 class BasicInfoView(GenericAPIView):
@@ -41,7 +41,6 @@ class BasicInfoView(GenericAPIView):
         email_address = serializer.data.get('email_address')
         currency = serializer.data.get('currency')
         date_type = serializer.data.get('date_type')
-        print(name, phone_number, email_address, currency, date_type)
         user = request.user
         user.username = name
         user.phone_number = phone_number
@@ -61,6 +60,61 @@ class BasicInfoView(GenericAPIView):
                         "email_address": user.email,
                         "currency": user.common_parameters.currency,
                         "date_type": user.common_parameters.date_type
+                    }
+                }
+            }
+        )
+
+
+class GeneralInfoView(GenericAPIView):
+    serializer_class = GeneralInfoSerializer
+
+    def get(self, request):
+        user = request.user
+        agency = user.agency
+        common_parameter = agency.common_parameters
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "user_info": {
+                        "name": agency.name,
+                        "currency": common_parameter.currency,
+                        "date_type": common_parameter.date_type
+                    }
+                }
+            }
+        )
+
+    def put(self, request):
+        if not request.user.is_agency_admin:
+            print('llllllllllllll')
+            return Response(
+                {
+                    "result": False
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        name = serializer.data.get('name')
+        currency = serializer.data.get('currency')
+        date_type = serializer.data.get('date_type')
+        agency = request.user.agency
+        agency.name = name
+        agency.save()
+        agency.common_parameters.currency = currency
+        agency.common_parameters.date_type = date_type
+        agency.common_parameters.save()
+
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "user_info": {
+                        "name": agency.name,
+                        "currency": agency.common_parameters.currency,
+                        "date_type": agency.common_parameters.date_type
                     }
                 }
             }

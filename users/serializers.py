@@ -174,3 +174,33 @@ class BasicInfoSerializer(serializers.ModelSerializer):
             raise CustomException(code=14, message=self.error_messages['invalid_date_type'])
 
         return attrs
+
+
+class GeneralInfoSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    currency = serializers.CharField(required=False)
+    date_type = serializers.CharField(required=False)
+
+    default_error_messages = {
+        'invalid_name': _('name is invalid.'),
+        'invalid_currency': _('currency is invalid.'),
+        'invalid_date_type': _('date_type is invalid.'),
+    }
+
+    class Meta:
+        model = Team
+        fields = ("name", "currency", "date_type")
+
+    def validate(self, attrs):
+        name = attrs.get("name")
+        currency = attrs.get("currency")
+        date_type = attrs.get("date_type")
+
+        if not name:
+            raise CustomException(code=10, message=self.error_messages['invalid_name'])
+        if not currency:
+            raise CustomException(code=11, message=self.error_messages['invalid_currency'])
+        if not date_type:
+            raise CustomException(code=12, message=self.error_messages['invalid_date_type'])
+
+        return attrs
