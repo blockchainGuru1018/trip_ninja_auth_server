@@ -31,27 +31,68 @@ class NameCheckView(GenericAPIView):
 
 
 class AllTeamsView(GenericAPIView):
-    permission_classes = IsAgencyAdmin,
+    permission_classes = IsTeamLead,
 
     def get(self, request):
         keyword = request.GET.get('keyword')
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
-        if keyword:
-            allteams = Team.objects.filter(name__icontains=keyword).order_by('-id')
-            number_of_team = Team.objects.filter(name__icontains=keyword).count()
-        else:
-            allteams = Team.objects.all().order_by('-id')
-            number_of_team = Team.objects.all().count()
-        paginator = Paginator(allteams, number_per_page)
-        try:
-            search = paginator.page(page)
-        except PageNotAnInteger:
-            search = paginator.page(1)
-        except EmptyPage:
-            search = []
-
         sea_teams = []
+
+        if request.user.is_superuser:
+            if keyword:
+                allteams = Team.objects.filter(name__icontains=keyword).order_by('-id')
+                number_of_team = Team.objects.filter(name__icontains=keyword).count()
+            else:
+                allteams = Team.objects.all().order_by('-id')
+                number_of_team = Team.objects.all().count()
+            paginator = Paginator(allteams, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+
+        elif request.user.is_agency_admin:
+            agency = request.user.agency
+            if keyword:
+                allteams = Team.objects.filter(agency=agency, name__icontains=keyword).order_by('-id')
+                number_of_team = Team.objects.filter(agency=agency, name__icontains=keyword).count()
+            else:
+                allteams = Team.objects.filter(agency=agency).order_by('-id')
+                number_of_team = Team.objects.filter(agency=agency).count()
+            paginator = Paginator(allteams, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+        else:
+            number_of_team = 1
+            team = request.user.team
+            number_of_users = User.objects.filter(team=team).count()
+            members = User.objects.filter(team=team).values_list("id", flat=True)
+            item = []
+            item.append({
+                **serialize_team(team),
+                "leader_id": team.admin.id,
+                "is_booking": team.is_booking,
+                "members": members,
+                "number_of_users": number_of_users
+            })
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "number_of_teams": number_of_team,
+                        "teams": item
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
+
         for sea in search:
             number_of_users = User.objects.filter(team=sea).count()
             members = User.objects.filter(team=sea).values_list("id", flat=True)
@@ -156,35 +197,44 @@ class TeamUpdateView(GenericAPIView):
     serializer_class = TeamUpdateSerializer
 
     def put(self, request):
+        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team = serializer.validated_data['team']
-        team.admin = serializer.validated_data['team_lead']
-        team.is_booking = serializer.data.get('is_booking')
-        team.name = serializer.data.get('team_name')
-        team.save()
-        members = serializer.data.get('members')
-        if members:
-            User.objects.filter(team=team).update(team=None, is_agent=True)
-            User.objects.filter(id__in=members).update(team=team, is_agent=False)
-        number_of_users = User.objects.filter(id__in=members).count()
+        if user.is_superuser or team.admin == user or team.agency.admin == user:
+            team.admin = serializer.validated_data['team_lead']
+            team.is_booking = serializer.data.get('is_booking')
+            team.name = serializer.data.get('team_name')
+            team.save()
+            members = serializer.data.get('members')
+            if members:
+                User.objects.filter(team=team).update(team=None, is_agent=True)
+                User.objects.filter(id__in=members).update(team=team, is_agent=False)
+            number_of_users = User.objects.filter(id__in=members).count()
+
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "teams": {
+                            "team_id": team.id,
+                            "team_name": team.name,
+                            "team_leader": team.admin.username,
+                            "leader_id": team.admin.id,
+                            "is_booking": team.is_booking,
+                            "members": members,
+                            "number_of_users": number_of_users
+                        }
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
 
         return Response(
             {
                 "result": True,
-                "data": {
-                    "teams": {
-                        "team_id": team.id,
-                        "team_name": team.name,
-                        "team_leader": team.admin.username,
-                        "leader_id": team.admin.id,
-                        "is_booking": team.is_booking,
-                        "members": members,
-                        "number_of_users": number_of_users
-                    }
-                }
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_403_FORBIDDEN
         )
 
 
@@ -215,27 +265,61 @@ class AddTeamView(GenericAPIView):
 
 
 class AllAgencyView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request):
         keyword = request.GET.get('keyword')
         page = request.GET.get('page')
         number_per_page = request.GET.get('per_page')
-        if keyword:
-            allagencies = Agency.objects.filter(name__icontains=keyword).order_by('-id')
-            number_of_agency = Agency.objects.filter(name__icontains=keyword).count()
-        else:
-            allagencies = Agency.objects.all().order_by('-id')
-            number_of_agency = Agency.objects.all().count()
-        paginator = Paginator(allagencies, number_per_page)
-        try:
-            search = paginator.page(page)
-        except PageNotAnInteger:
-            search = paginator.page(1)
-        except EmptyPage:
-            search = []
-
         sea_agency = []
+        if request.user.is_superuser:
+            if keyword:
+                allagencies = Agency.objects.filter(name__icontains=keyword).order_by('-id')
+                number_of_agency = Agency.objects.filter(name__icontains=keyword).count()
+            else:
+                allagencies = Agency.objects.all().order_by('-id')
+                number_of_agency = Agency.objects.all().count()
+            paginator = Paginator(allagencies, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+
+        else:
+            agency = request.user.agency
+            teams = Team.objects.filter(agency=agency)
+            number_of_users = 0
+            data_source = DataSource.objects.filter(agency=agency)
+            data = []
+            for item in data_source:
+                data.append({
+                    "id": item.id,
+                    "pcc": item.pcc,
+                    "provider": item.provider
+                })
+            for team in teams:
+                number_of_users = number_of_users + User.objects.filter(team=team).count()
+            sea_agency.append({
+                **serialize_agency(agency),
+                "number_of_users": number_of_users,
+                "api_username": agency.api_username,
+                "api_password": agency.api_password,
+                "data_source": data
+            })
+
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "superuser_name": request.user.username,
+                        "number_of_agencies": 1,
+                        "agency": sea_agency
+                    }
+                }
+            )
+
         for sea in search:
             teams = Team.objects.filter(agency=sea)
             number_of_users = 0
@@ -409,49 +493,58 @@ class AgencyUpdateView(GenericAPIView):
     serializer_class = AgencyUpdateSerializer
 
     def put(self, request):
+        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         agency = serializer.validated_data['agency']
-        agency.name = serializer.data.get('agency_name')
-        agency.api_username = serializer.data.get('api_username')
-        agency.api_password = serializer.data.get('api_password')
-        agency.save()
-        data_source = serializer.data.get('data_source')
-        DataSource.objects.filter(agency=agency).update(agency=None)
-        if data_source:
-            for data in data_source:
-                try:
-                    data_item = DataSource.objects.get(id=data['id'])
-                    data_item.pcc = data['pcc']
-                    data_item.agency = agency
-                    data_item.save()
-                except ObjectDoesNotExist:
-                    return Response(
-                        {
-                            "result": False,
-                            "data": {
-                                "msg": "data_source is invalid."
-                            }
-                        },
-                        status=status.HTTP_201_CREATED
-                    )
+        if user.is_superuser or agency.admin == user:
+            agency.name = serializer.data.get('agency_name')
+            agency.api_username = serializer.data.get('api_username')
+            agency.api_password = serializer.data.get('api_password')
+            agency.save()
+            data_source = serializer.data.get('data_source')
+            DataSource.objects.filter(agency=agency).update(agency=None)
+            if data_source:
+                for data in data_source:
+                    try:
+                        data_item = DataSource.objects.get(id=data['id'])
+                        data_item.pcc = data['pcc']
+                        data_item.agency = agency
+                        data_item.save()
+                    except ObjectDoesNotExist:
+                        return Response(
+                            {
+                                "result": False,
+                                "data": {
+                                    "msg": "data_source is invalid."
+                                }
+                            },
+                            status=status.HTTP_201_CREATED
+                        )
+
+            return Response(
+                {
+                    "result": True,
+                    "data": {
+                        "agency": {
+                            "agency_id": agency.id,
+                            "agency_name": agency.name,
+                            "status": True,
+                            "number_of_users": 0,
+                            "api_username": agency.api_username,
+                            "api_password": agency.api_password,
+                            "data_source": data_source
+                        }
+                    }
+                },
+                status=status.HTTP_201_CREATED
+            )
 
         return Response(
             {
                 "result": True,
-                "data": {
-                    "agency": {
-                        "agency_id": agency.id,
-                        "agency_name": agency.name,
-                        "status": True,
-                        "number_of_users": 0,
-                        "api_username": agency.api_username,
-                        "api_password": agency.api_password,
-                        "data_source": data_source
-                    }
-                }
             },
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_403_FORBIDDEN
         )
 
 

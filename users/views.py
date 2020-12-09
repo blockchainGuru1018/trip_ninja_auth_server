@@ -184,21 +184,54 @@ class SearchDetailView(GenericAPIView):
         number_per_page = request.GET.get('per_page')
         sort_by = request.GET.get('sort_by')
         sort_order = request.GET.get('sort_order')
-        if keyword:
-            allusers = User.objects.filter(username__icontains=keyword).order_by('-id')
-            number_of_active_users = User.objects.filter(username__icontains=keyword).count()
-        else:
-            allusers = User.objects.all().order_by('-id').order_by('-id')
-            number_of_active_users = User.objects.all().count()
-        paginator = Paginator(allusers, number_per_page)
-        try:
-            search = paginator.page(page)
-        except PageNotAnInteger:
-            search = paginator.page(1)
-        except EmptyPage:
-            search = []
-
         sea_users = []
+        if request.user.is_superuser:
+            if keyword:
+                allusers = User.objects.filter(username__icontains=keyword).order_by('-id')
+                number_of_active_users = User.objects.filter(username__icontains=keyword).count()
+            else:
+                allusers = User.objects.all().order_by('-id').order_by('-id')
+                number_of_active_users = User.objects.all().count()
+            paginator = Paginator(allusers, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+
+        elif request.user.is_agency_admin:
+            agency = request.user.agency
+            if keyword:
+                allusers = User.objects.filter(agency=agency, username__icontains=keyword).order_by('-id')
+                number_of_active_users = User.objects.filter(agency=agency, username__icontains=keyword).count()
+            else:
+                allusers = User.objects.filter(agency=agency).order_by('-id').order_by('-id')
+                number_of_active_users = User.objects.filter(agency=agency).count()
+            paginator = Paginator(allusers, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+
+        else:
+            team = request.user.team
+            if keyword:
+                allusers = User.objects.filter(team=team, username__icontains=keyword).order_by('-id')
+                number_of_active_users = User.objects.filter(team=team, username__icontains=keyword).count()
+            else:
+                allusers = User.objects.filter(team=team).order_by('-id').order_by('-id')
+                number_of_active_users = User.objects.filter(team=team).count()
+            paginator = Paginator(allusers, number_per_page)
+            try:
+                search = paginator.page(page)
+            except PageNotAnInteger:
+                search = paginator.page(1)
+            except EmptyPage:
+                search = []
+
         for sea in search:
             if sea.team is None:
                 team_name = None
