@@ -19,8 +19,8 @@
 - model: users.User
   pk: 1
   fields:
-    password: 12345
-    email: super@test.com
+    password: pbkdf2_sha256$216000$MFhlwy0cRwFl$14q65c9a8CCdRwg09WM/p9iv3+q0171zyiS+49Bxz7c=
+    email: test@hotmail.com
     username: superuser
     first_name: first_name
     last_name: last_name
@@ -38,9 +38,9 @@
 - model: users.User
   pk: 2
   fields:
-    password: 12345
-    email: user1@test.com
-    username: user
+    password: pbkdf2_sha256$216000$F3zTBgWqPm3b$cSTmEp8J/Wm4nCd9QdLuYluKERa7CC+OqS+dlZwpPVc=
+    email: test1@hotmail.com
+    username: tester31
     first_name: first_name
     last_name: last_name
     phone_number: +1111111111111

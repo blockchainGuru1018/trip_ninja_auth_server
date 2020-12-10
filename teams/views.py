@@ -119,7 +119,11 @@ class AllTeamsListView(GenericAPIView):
     permission_classes = IsAgencyAdmin,
 
     def get(self, request):
-        team_list = Team.objects.all()
+        if request.user.is_superuser:
+            team_list = Team.objects.all()
+        else:
+            agency = Agency.objects.filter(admin=request.user).exists()
+            team_list = Team.objects.filter(agency=agency)
         team_detail = []
         for team in team_list:
             team_detail.append({
@@ -503,24 +507,25 @@ class AgencyUpdateView(GenericAPIView):
             agency.api_password = serializer.data.get('api_password')
             agency.save()
             data_source = serializer.data.get('data_source')
-            DataSource.objects.filter(agency=agency).update(agency=None)
-            if data_source:
-                for data in data_source:
-                    try:
-                        data_item = DataSource.objects.get(id=data['id'])
-                        data_item.pcc = data['pcc']
-                        data_item.agency = agency
-                        data_item.save()
-                    except ObjectDoesNotExist:
-                        return Response(
-                            {
-                                "result": False,
-                                "data": {
-                                    "msg": "data_source is invalid."
-                                }
-                            },
-                            status=status.HTTP_201_CREATED
-                        )
+            if request.user.is_superuser:
+                DataSource.objects.filter(agency=agency).update(agency=None)
+                if data_source:
+                    for data in data_source:
+                        try:
+                            data_item = DataSource.objects.get(id=data['id'])
+                            data_item.pcc = data['pcc']
+                            data_item.agency = agency
+                            data_item.save()
+                        except ObjectDoesNotExist:
+                            return Response(
+                                {
+                                    "result": False,
+                                    "data": {
+                                        "msg": "data_source is invalid."
+                                    }
+                                },
+                                status=status.HTTP_201_CREATED
+                            )
 
             return Response(
                 {

@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from datetime import datetime, timedelta
@@ -27,7 +28,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "username", "first_name", "last_name", "password")
+        fields = ("email", "username", "first_name", "last_name", "password", "phone_number")
 
     def validate(self, attrs):
         email = attrs.get("email")
@@ -51,6 +52,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if not password or len(password) < 6:
             raise CustomException(code=16, message=self.error_messages['invalid_password'])
 
+        attrs['password'] = make_password(attrs['password'])
         return attrs
 
 
@@ -81,7 +83,7 @@ class LoginSerializer(serializers.Serializer):
 
         try:
             self.user = get_user_model().objects.get(**kwargs)
-            if self.user.password == password:
+            if self.user.check_password(password):
                 if self.user.is_active:
                     attrs['user'] = self.user
                     return attrs

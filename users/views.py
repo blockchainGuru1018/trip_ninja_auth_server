@@ -274,6 +274,13 @@ class AddUserView(GenericAPIView):
         user.last_name = serializer.data.get('last_name')
         if serializer.validated_data['team']:
             user.team = serializer.validated_data['team']
+            team = serializer.validated_data['team']
+            if team.agency:
+                user.agency = team.agency
+        else:
+            user.is_agent = True
+        if request.user.is_agency_admin:
+            user.agency_id = Agency.objects.filter(admin=request.user).exists()
         user.is_active = serializer.data.get('is_active')
         user.save()
 
