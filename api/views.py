@@ -1,10 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+import uuid
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_auth.views import LoginView, LogoutView
 from datetime import datetime
-import random
+from django.contrib.auth.hashers import make_password
 
 from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
     ChangePasswordSerializer
@@ -56,8 +57,10 @@ class ForgotPasswordView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        token = None
 
         username = serializer.data.get('username')
+        print(username)
         if '@' in username:
             kwargs = {'email': username}
         else:
@@ -65,8 +68,10 @@ class ForgotPasswordView(CreateAPIView):
 
         try:
             user = User.objects.get(**kwargs)
+            print(user.username)
             if user.is_active:
-                token = random.randint(100000, 999999)
+                token = uuid.uuid4()
+                print(token)
                 user.password_reset_token = token
                 user.password_reset_sent_at = datetime.now()
                 user.save()
@@ -74,36 +79,41 @@ class ForgotPasswordView(CreateAPIView):
             pass
 
         headers = self.get_success_headers(serializer.data)
-        return Response({"result": True}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "reset_token": token
+                }
+             }, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 class ConfirmTokenView(CreateAPIView):
-    serializer_class = ConfirmTokenSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = User.objects.get(password_reset_token=int(serializer.data.get('token')))
-        user.password_reset_sent_at = None
-        user.save()
-
-        return Response({"result": True}, status=status.HTTP_201_CREATED)
+    def get(self, request, *args, **kwargs):
+        token = request.GET.get('token')
+        try:
+            user = User.objects.get(password_reset_token=token)
+            return Response({"result": True}, status=status.HTTP_201_CREATED)
+        except ObjectDoesNotExist:
+            return Response({"result": False}, status=status.HTTP_404_NOT_FOUND)
 
 
 class ResetPasswordView(CreateAPIView):
-    serializer_class = ResetPasswordSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        user = User.objects.get(password_reset_token=int(serializer.data.get('token')))
-        user.password = serializer.data.get('password')
-        user.password_reset_token = None
-        user.save()
-
-        return Response({"result": True}, status=status.HTTP_201_CREATED)
+    def get(self, request, *args, **kwargs):
+        token = request.GET.get('token')
+        password = request.GET.get('password')
+        try:
+            user = User.objects.get(password_reset_token=token)
+            user.password = make_password(password)
+            user.password_reset_sent_at = None
+            user.password_reset_token = None
+            user.save()
+            return Response({"result": True}, status=status.HTTP_201_CREATED)
+        except ObjectDoesNotExist:
+            return Response({"result": False}, status=status.HTTP_404_NOT_FOUND)
 
 
 class ChangePasswordView(CreateAPIView):

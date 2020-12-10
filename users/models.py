@@ -26,6 +26,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     ENDPOINT_CHOICES = [("prod", "prod"), ("preprod", "preprod")]
     search_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
     booking_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
+    password_reset_token = models.CharField(null=True, max_length=100)
+    password_reset_sent_at = models.DateTimeField(null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

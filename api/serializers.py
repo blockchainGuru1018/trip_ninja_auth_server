@@ -156,12 +156,12 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         try:
             user = User.objects.get(password_reset_token=int(token))
-            if user.password_reset_sent_at:
-                raise CustomException(code=10, message=self.error_messages['invalid_token'])
+            if user.password_reset_sent_at.replace(tzinfo=None) < datetime.now() - timedelta(minutes=10):
+                raise CustomException(code=12, message=self.error_messages['token_expired'])
             if not user.is_active:
                 raise CustomException(code=12, message=self.error_messages['inactive_account'])
 
-            attrs['password'] = attrs['password']
+            attrs['password'] = make_password(attrs['password'])
             return attrs
         except User.DoesNotExist:
             pass
