@@ -13,7 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=100)
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
-    phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
     agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name='user_agency', null=True) 
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, related_name='user', null=True)
     common_parameters = models.OneToOneField(CommonParameters, on_delete=models.CASCADE,

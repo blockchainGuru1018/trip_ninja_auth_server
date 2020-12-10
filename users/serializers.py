@@ -30,9 +30,9 @@ class GetUserByIdSerializer(serializers.Serializer):
 
 
 class SingleAddUserSerializer(serializers.ModelSerializer):
-    email = serializers.CharField(required=False)
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
+    email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     team_id = serializers.IntegerField(required=False)
     is_active = serializers.BooleanField(required=False)
 
@@ -96,9 +96,9 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False)
     team_id = serializers.IntegerField(required=False)
-    username = serializers.CharField(required=False)
-    email = serializers.CharField(required=False)
-    phone_number = serializers.CharField(required=False)
+    username = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
 
     default_error_messages = {
@@ -106,7 +106,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         'invalid_team_id': _('team_id is invalid.'),
         'invalid_username': _('username is invalid.'),
         'invalid_email': _('email is invalid.'),
-        'invalid_phone_number': _('phone_number is invalid.'),
         'invalid_is_active': _('is_active is invalid.'),
     }
 
@@ -137,15 +136,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class BasicInfoSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)
-    phone_number = serializers.CharField(required=True)
-    email_address = serializers.CharField(required=False)
-    currency = serializers.CharField(required=False)
-    date_type = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    email_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    currency = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    date_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     default_error_messages = {
         'invalid_name': _('name is invalid.'),
-        'invalid_phone_number': _('phone_number is invalid.'),
         'invalid_email_address': _('email_address is invalid.'),
         'invalid_currency': _('currency is invalid.'),
         'invalid_date_type': _('date_type is invalid.'),
@@ -157,15 +155,12 @@ class BasicInfoSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         name = attrs.get("name")
-        phone_number = attrs.get("phone_number")
         email_address = attrs.get("email_address")
         currency = attrs.get("currency")
         date_type = attrs.get("date_type")
 
         if not name:
             raise CustomException(code=10, message=self.error_messages['invalid_name'])
-        if not phone_number:
-            raise CustomException(code=11, message=self.error_messages['invalid_phone_number'])
         if not email_address:
             raise CustomException(code=12, message=self.error_messages['invalid_email_address'])
         if not currency:
@@ -177,9 +172,9 @@ class BasicInfoSerializer(serializers.ModelSerializer):
 
 
 class GeneralInfoSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)
-    currency = serializers.CharField(required=False)
-    date_type = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    currency = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    date_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     default_error_messages = {
         'invalid_name': _('name is invalid.'),

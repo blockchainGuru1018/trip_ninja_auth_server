@@ -417,8 +417,7 @@ class UserUpdateView(GenericAPIView):
         user = serializer.validated_data['user']
         user.username = serializer.data.get('username')
         user.email = serializer.data.get('email')
-        if serializer.data.get('phone_number'):
-            user.phone_number = serializer.data.get('phone_number')
+        user.phone_number = serializer.data.get('phone_number')
         user.is_active = serializer.data.get('is_active')
         if serializer.data.get('team_id'):
             user.team = Team.objects.get(id=serializer.data.get('team_id'))
