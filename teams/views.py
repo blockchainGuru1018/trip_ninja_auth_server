@@ -562,9 +562,12 @@ class AgencyAchieveView(GenericAPIView):
             if agency.is_active:
                 agency.is_active = False
                 agency.save()
+                User.objects.filter(agency=agency).update(is_active=False)
+
             else:
                 agency.is_active = True
                 agency.save()
+                User.objects.filter(agency=agency).update(is_active=True)
             return Response(
                 {
                     "result": True,
