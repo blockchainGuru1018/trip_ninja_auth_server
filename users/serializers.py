@@ -92,7 +92,8 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False)
     team_id = serializers.IntegerField(required=False)
-    username = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
@@ -100,27 +101,31 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     default_error_messages = {
         'invalid_user_id': _('user_id is invalid.'),
         'invalid_team_id': _('team_id is invalid.'),
-        'invalid_username': _('username is invalid.'),
+        'invalid_first_name': _('first_name is invalid.'),
+        'invalid_last_name': _('last_name is invalid.'),
         'invalid_email': _('email is invalid.'),
         'invalid_is_active': _('is_active is invalid.'),
     }
 
     class Meta:
         model = User
-        fields = ("user_id", "team_id", "username", "email", "phone_number", "is_active")
+        fields = ("user_id", "team_id", "first_name", "last_name", "email", "phone_number", "is_active")
 
     def validate(self, attrs):
         user_id = attrs.get("user_id")
         is_active = attrs.get("is_active")
-        username = attrs.get("username")
+        first_name = attrs.get("first_name")
+        last_name = attrs.get("last_name")
         email = attrs.get("email")
 
         if user_id is None:
             raise CustomException(code=10, message=self.error_messages['invalid_user_id'])
         if is_active is None:
             raise CustomException(code=12, message=self.error_messages['invalid_is_active'])
-        if username is None:
-            raise CustomException(code=13, message=self.error_messages['invalid_username'])
+        if first_name is None:
+            raise CustomException(code=13, message=self.error_messages['invalid_first_name'])
+        if last_name is None:
+            raise CustomException(code=13, message=self.error_messages['invalid_last_name'])
         if email is None:
             raise CustomException(code=14, message=self.error_messages['invalid_email'])
 
@@ -132,14 +137,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class BasicInfoSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     email_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     currency = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     date_type = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     default_error_messages = {
-        'invalid_name': _('name is invalid.'),
+        'invalid_first_name': _('first_name is invalid.'),
+        'invalid_last_name': _('last_name is invalid.'),
         'invalid_email_address': _('email_address is invalid.'),
         'invalid_currency': _('currency is invalid.'),
         'invalid_date_type': _('date_type is invalid.'),
@@ -147,16 +154,19 @@ class BasicInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ("name", "phone_number", "email_address", "currency", "date_type")
+        fields = ("first_name", "last_name", "phone_number", "email_address", "currency", "date_type")
 
     def validate(self, attrs):
-        name = attrs.get("name")
+        first_name = attrs.get("first_name")
+        last_name = attrs.get("last_name")
         email_address = attrs.get("email_address")
         currency = attrs.get("currency")
         date_type = attrs.get("date_type")
 
-        if not name:
-            raise CustomException(code=10, message=self.error_messages['invalid_name'])
+        if not first_name:
+            raise CustomException(code=10, message=self.error_messages['invalid_first_name'])
+        if not last_name:
+            raise CustomException(code=10, message=self.error_messages['invalid_last_name'])
         if not email_address:
             raise CustomException(code=12, message=self.error_messages['invalid_email_address'])
         if not currency:

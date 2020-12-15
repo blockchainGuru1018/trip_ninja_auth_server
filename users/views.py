@@ -24,7 +24,8 @@ class BasicInfoView(GenericAPIView):
                 "result": True,
                 "data": {
                     "user_info": {
-                        "name": user.username,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
                         "phone_number": user.phone_number,
                         "email_address": user.email,
                         "currency": common_parameter.currency,
@@ -37,13 +38,15 @@ class BasicInfoView(GenericAPIView):
     def put(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        name = serializer.data.get('name')
+        first_name = serializer.data.get('first_name')
+        last_name = serializer.data.get('last_name')
         phone_number = serializer.data.get('phone_number')
         email_address = serializer.data.get('email_address')
         currency = serializer.data.get('currency')
         date_type = serializer.data.get('date_type')
         user = request.user
-        user.username = name
+        user.first_name = first_name
+        user.last_name = last_name
         user.phone_number = phone_number
         user.email = email_address
         user.save()
@@ -56,7 +59,8 @@ class BasicInfoView(GenericAPIView):
                 "result": True,
                 "data": {
                     "user_info": {
-                        "name": user.username,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
                         "phone_number": user.phone_number,
                         "email_address": user.email,
                         "currency": user.common_parameters.currency,
@@ -601,7 +605,8 @@ class UserUpdateView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        user.username = serializer.data.get('username')
+        user.first_name = serializer.data.get('first_name')
+        user.last_name = serializer.data.get('last_name')
         user.email = serializer.data.get('email')
         user.phone_number = serializer.data.get('phone_number')
         user.is_active = serializer.data.get('is_active')
