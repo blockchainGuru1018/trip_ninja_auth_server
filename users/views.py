@@ -424,13 +424,6 @@ class BulkAddUserView(GenericAPIView):
         if request.user.is_agency_admin:
             agency = request.user.agency
             common_parameter = agency.common_parameters
-            common_parameters = CommonParameters()
-            common_parameters.currency = common_parameter.currency
-            common_parameters.date_type = common_parameter.date_type
-            common_parameters.booking_enabled = common_parameter.booking_enabled
-            common_parameters.virtual_interlining = common_parameter.virtual_interlining
-            common_parameters.exclude_carriers = common_parameter.exclude_carriers
-            common_parameters.save()
             if serializer.data.get('team_id'):
                 try:
                     team = Team.objects.get(id=serializer.data.get('team_id'))
@@ -445,6 +438,13 @@ class BulkAddUserView(GenericAPIView):
                             user.agency = agency
                             user.is_active = serializer.data.get('is_active')
                             user.is_agent = True
+                            common_parameters = CommonParameters()
+                            common_parameters.currency = common_parameter.currency
+                            common_parameters.date_type = common_parameter.date_type
+                            common_parameters.booking_enabled = common_parameter.booking_enabled
+                            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                            common_parameters.save()
                             user.common_parameters = common_parameters
                             user.save()
                 except ObjectDoesNotExist:
@@ -467,19 +467,19 @@ class BulkAddUserView(GenericAPIView):
                         user.agency = agency
                         user.is_agent = True
                         user.is_active = serializer.data.get('is_active')
+                        common_parameters = CommonParameters()
+                        common_parameters.currency = common_parameter.currency
+                        common_parameters.date_type = common_parameter.date_type
+                        common_parameters.booking_enabled = common_parameter.booking_enabled
+                        common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                        common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                        common_parameters.save()
                         user.common_parameters = common_parameters
                         user.save()
         elif request.user.is_team_lead:
             team = request.user.team
             agency = team.agency
             common_parameter = agency.common_parameters
-            common_parameters = CommonParameters()
-            common_parameters.currency = common_parameter.currency
-            common_parameters.date_type = common_parameter.date_type
-            common_parameters.booking_enabled = common_parameter.booking_enabled
-            common_parameters.virtual_interlining = common_parameter.virtual_interlining
-            common_parameters.exclude_carriers = common_parameter.exclude_carriers
-            common_parameters.save()
             if emails:
                 for email in emails:
                     user = User()
@@ -491,19 +491,19 @@ class BulkAddUserView(GenericAPIView):
                     user.agency = agency
                     user.is_active = serializer.data.get('is_active')
                     user.is_agent = True
+                    common_parameters = CommonParameters()
+                    common_parameters.currency = common_parameter.currency
+                    common_parameters.date_type = common_parameter.date_type
+                    common_parameters.booking_enabled = common_parameter.booking_enabled
+                    common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                    common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                    common_parameters.save()
                     user.common_parameters = common_parameters
                     user.save()
         else:
             try:
                 agency = Agency.objects.get(id=serializer.data.get('agency_id'))
                 common_parameter = agency.common_parameters
-                common_parameters = CommonParameters()
-                common_parameters.currency = common_parameter.currency
-                common_parameters.date_type = common_parameter.date_type
-                common_parameters.booking_enabled = common_parameter.booking_enabled
-                common_parameters.virtual_interlining = common_parameter.virtual_interlining
-                common_parameters.exclude_carriers = common_parameter.exclude_carriers
-                common_parameters.save()
 
                 if serializer.data.get('team_id'):
                     try:
@@ -519,6 +519,13 @@ class BulkAddUserView(GenericAPIView):
                                 user.team = team
                                 user.is_agent = True
                                 user.is_active = serializer.data.get('is_active')
+                                common_parameters = CommonParameters()
+                                common_parameters.currency = common_parameter.currency
+                                common_parameters.date_type = common_parameter.date_type
+                                common_parameters.booking_enabled = common_parameter.booking_enabled
+                                common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                                common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                                common_parameters.save()
                                 user.common_parameters = common_parameters
                                 user.save()
                     except ObjectDoesNotExist:
@@ -540,6 +547,13 @@ class BulkAddUserView(GenericAPIView):
                         user.agency = agency
                         user.is_active = serializer.data.get('is_active')
                         user.is_agent = True
+                        common_parameters = CommonParameters()
+                        common_parameters.currency = common_parameter.currency
+                        common_parameters.date_type = common_parameter.date_type
+                        common_parameters.booking_enabled = common_parameter.booking_enabled
+                        common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                        common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                        common_parameters.save()
                         user.common_parameters = common_parameters
                         user.save()
             except ObjectDoesNotExist:
