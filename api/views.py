@@ -25,7 +25,11 @@ class UserLoginView(LoginView):
                     "email": self.user.email,
                     "username": self.user.username,
                     "first_name": self.user.first_name,
-                    "last_name": self.user.last_name
+                    "last_name": self.user.last_name,
+                    "is_superuser": self.user.is_superuser,
+                    "is_agent": self.user.is_agent,
+                    "is_team_lead": self.user.is_team_lead,
+                    "is_agency_admin": self.user.is_agency_admin
                 }
             }
         }
