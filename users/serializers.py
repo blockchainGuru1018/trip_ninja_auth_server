@@ -34,6 +34,7 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     team_id = serializers.IntegerField(required=False)
+    agency_id = serializers.IntegerField(required=False)
     is_active = serializers.BooleanField(required=False)
 
     default_error_messages = {
@@ -47,13 +48,14 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "first_name", "last_name", "team_id", "is_active")
+        fields = ("email", "first_name", "last_name", "team_id", "agency_id", "is_active")
 
     def validate(self, attrs):
         email = attrs.get("email")
         first_name = attrs.get("first_name")
         last_name = attrs.get("last_name")
         team_id = attrs.get("team_id")
+        agency_id = attrs.get("agency_id")
 
         if not email:
             raise CustomException(code=10, message=self.error_messages['invalid_email'])
@@ -61,19 +63,13 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
             raise CustomException(code=12, message=self.error_messages['invalid_first_name'])
         if not last_name:
             raise CustomException(code=13, message=self.error_messages['invalid_last_name'])
-
-        try:
-            team = Team.objects.get(id=team_id)
-            attrs['team'] = team
-            return attrs
-        except ObjectDoesNotExist:
-            attrs['team'] = None
-            return attrs
+        return attrs
 
 
 class BulkAddUserSerializer(serializers.ModelSerializer):
     emails = serializers.ListField(required=False)
     team_id = serializers.IntegerField(required=False)
+    agency_id = serializers.IntegerField(required=False)
     is_active = serializers.BooleanField(required=False)
 
     default_error_messages = {
@@ -82,7 +78,7 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("emails", "team_id", "is_active")
+        fields = ("emails", "team_id", "agency_id", "is_active")
 
     def validate(self, attrs):
         is_active = attrs.get("is_active")

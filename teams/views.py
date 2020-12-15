@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 
 from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_team, serialize_agency
+from common.models import CommonParameters
 from teams.models import Team, Agency, DataSource
 from users.models import User
 from .serializers import TeamCreateSerializer, AgencySerializer, TeamSerializer, TeamUpdateSerializer, \
@@ -122,8 +123,10 @@ class AllTeamsListView(GenericAPIView):
         if request.user.is_superuser:
             team_list = Team.objects.all()
         else:
-            agency = Agency.objects.filter(admin=request.user).exists()
+            agency = Agency.objects.get(admin=request.user)
+            print(agency)
             team_list = Team.objects.filter(agency=agency)
+            print(team_list)
         team_detail = []
         for team in team_list:
             team_detail.append({
@@ -249,14 +252,47 @@ class AddTeamView(GenericAPIView):
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        team = Team()
-        team.name = serializer.data.get('team_name')
-        team.admin = serializer.validated_data['admin']
-        team.is_booking = serializer.validated_data['is_booking']
-        team.save()
-        members = serializer.data.get('members')
-        if members:
-            User.objects.filter(id__in=members).update(team=team, is_agent=False)
+        user = request.user
+        if request.user.is_agency_admin:
+            agency = user.agency
+            common_parameter = agency.common_parameters
+
+            team = Team()
+            team.name = serializer.data.get('team_name')
+            team.admin = serializer.validated_data['admin']
+            team.is_booking = serializer.validated_data['is_booking']
+
+            common_parameters = CommonParameters()
+            common_parameters.currency = common_parameter.currency
+            common_parameters.date_type = common_parameter.date_type
+            common_parameters.booking_enabled = common_parameter.booking_enabled
+            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+            common_parameters.save()
+            team.common_parameters = common_parameters
+            team.save()
+            members = serializer.data.get('members')
+            if members:
+                User.objects.filter(id__in=members).update(team=team, agency=agency, is_agent=True)
+        else:
+            team = Team()
+            team.name = serializer.data.get('team_name')
+            team.admin = serializer.validated_data['admin']
+            team.is_booking = serializer.validated_data['is_booking']
+
+            common_parameters = CommonParameters()
+            common_parameters.currency = 'USD'
+            common_parameters.date_type = 'mm/dd/yyyy'
+            common_parameters.booking_enabled = True
+            common_parameters.virtual_interlining = True
+            common_parameters.exclude_carriers = 1
+            common_parameters.save()
+            team.common_parameters = common_parameters
+            team.save()
+            members = serializer.data.get('members')
+            if members:
+                User.objects.filter(id__in=members).update(team=team, is_agent=False)
+
         return Response(
             {
                 "result": True,
@@ -659,6 +695,27 @@ class AvailableDataSourceView(GenericAPIView):
                 "result": True,
                 "data": {
                     "data_source": data_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
+class AgencyTeamsListView(GenericAPIView):
+    permission_classes = IsSuperUser,
+
+    def get(self, request, pk):
+        team_list = Team.objects.filter(agency=pk)
+        team_detail = []
+        for team in team_list:
+            team_detail.append({
+                **serialize_team(team)
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "teams": team_detail
                 }
             },
             status=status.HTTP_201_CREATED

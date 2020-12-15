@@ -7,6 +7,7 @@ from django.db.models import Q
 
 from teams.models import Team, Agency
 from users.models import User
+from common.models import CommonParameters
 from common.serializers import IsSuperUser, IsAgencyAdmin, IsTeamLead, serialize_user
 from .serializers import GetUserByIdSerializer, SingleAddUserSerializer, BulkAddUserSerializer, UserUpdateSerializer,\
     BasicInfoSerializer, GeneralInfoSerializer
@@ -272,17 +273,92 @@ class AddUserView(GenericAPIView):
         user.username = serializer.data.get('first_name') + " " + serializer.data.get('last_name')
         user.first_name = serializer.data.get('first_name')
         user.last_name = serializer.data.get('last_name')
-        if serializer.validated_data['team']:
-            user.team = serializer.validated_data['team']
-            team = serializer.validated_data['team']
-            if team.agency:
-                user.agency = team.agency
-        else:
-            user.is_agent = True
-        if request.user.is_agency_admin:
-            user.agency_id = Agency.objects.filter(admin=request.user).exists()
         user.is_active = serializer.data.get('is_active')
-        user.save()
+        if request.user.is_agency_admin:
+            agency = request.user.agency
+            common_parameter = agency.common_parameters
+            common_parameters = CommonParameters()
+            common_parameters.currency = common_parameter.currency
+            common_parameters.date_type = common_parameter.date_type
+            common_parameters.booking_enabled = common_parameter.booking_enabled
+            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+            common_parameters.save()
+            user.agency = agency
+            user.common_parameters = common_parameters
+            if serializer.data.get('team_id'):
+                try:
+                    team = Team.objects.get(id=serializer.data.get('team_id'))
+                    user.team = team
+                    user.is_agent = False
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "Invalid team_id."
+                            },
+                        },
+                    )
+            else:
+                user.is_agent = True
+            user.save()
+        elif request.user.is_team_lead:
+            team = request.user.team
+            user.team = team
+            common_parameter = team.agency.common_parameters
+            common_parameters = CommonParameters()
+            common_parameters.currency = common_parameter.currency
+            common_parameters.date_type = common_parameter.date_type
+            common_parameters.booking_enabled = common_parameter.booking_enabled
+            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+            common_parameters.save()
+            user.common_parameters = common_parameters
+            user.agency = team.agency
+            user.is_agent = False
+            user.save()
+        else:
+            if serializer.data.get('agency_id'):
+                try:
+                    agency = Agency.objects.get(id=serializer.data.get('agency_id'))
+                    user.agency = agency
+                    common_parameter = agency.common_parameters
+                    common_parameters = CommonParameters()
+                    common_parameters.currency = common_parameter.currency
+                    common_parameters.date_type = common_parameter.date_type
+                    common_parameters.booking_enabled = common_parameter.booking_enabled
+                    common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                    common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                    common_parameters.save()
+                    user.common_parameters = common_parameters
+                    user.is_agent = False
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "Invalid agency_id."
+                            },
+                        },
+                    )
+            if serializer.data.get('team_id'):
+                try:
+                    team = Team.objects.get(id=serializer.data.get('team_id'))
+                    user.team = team
+                    user.is_agent = False
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "Invalid team_id."
+                            },
+                        },
+                    )
+            else:
+                user.is_agent = True
+            user.save()
 
         return Response(
             {
@@ -345,9 +421,42 @@ class BulkAddUserView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         emails = serializer.data.get('emails')
-        if serializer.data.get('team_id'):
-            try:
-                team = Team.objects.get(id=serializer.data.get('team_id'))
+        if request.user.is_agency_admin:
+            agency = request.user.agency
+            common_parameter = agency.common_parameters
+            common_parameters = CommonParameters()
+            common_parameters.currency = common_parameter.currency
+            common_parameters.date_type = common_parameter.date_type
+            common_parameters.booking_enabled = common_parameter.booking_enabled
+            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+            common_parameters.save()
+            if serializer.data.get('team_id'):
+                try:
+                    team = Team.objects.get(id=serializer.data.get('team_id'))
+                    if emails:
+                        for email in emails:
+                            user = User()
+                            user.email = email
+                            user.username = email
+                            user.first_name = email
+                            user.last_name = email
+                            user.team = team
+                            user.agency = agency
+                            user.is_active = serializer.data.get('is_active')
+                            user.is_agent = True
+                            user.common_parameters = common_parameters
+                            user.save()
+                except ObjectDoesNotExist:
+                    return Response(
+                        {
+                            "result": False,
+                            "data": {
+                                "msg": "team_id is invalid."
+                            },
+                        },
+                    )
+            else:
                 if emails:
                     for email in emails:
                         user = User()
@@ -355,20 +464,22 @@ class BulkAddUserView(GenericAPIView):
                         user.username = email
                         user.first_name = email
                         user.last_name = email
-                        user.team = team
+                        user.agency = agency
+                        user.is_agent = True
                         user.is_active = serializer.data.get('is_active')
+                        user.common_parameters = common_parameters
                         user.save()
-            except ObjectDoesNotExist:
-
-                return Response(
-                    {
-                        "result": False,
-                        "data": {
-                            "msg": "team_id is invalid."
-                        },
-                    },
-                )
-        else:
+        elif request.user.is_team_lead:
+            team = request.user.team
+            agency = team.agency
+            common_parameter = agency.common_parameters
+            common_parameters = CommonParameters()
+            common_parameters.currency = common_parameter.currency
+            common_parameters.date_type = common_parameter.date_type
+            common_parameters.booking_enabled = common_parameter.booking_enabled
+            common_parameters.virtual_interlining = common_parameter.virtual_interlining
+            common_parameters.exclude_carriers = common_parameter.exclude_carriers
+            common_parameters.save()
             if emails:
                 for email in emails:
                     user = User()
@@ -376,9 +487,70 @@ class BulkAddUserView(GenericAPIView):
                     user.username = email
                     user.first_name = email
                     user.last_name = email
-                    user.is_agent = True
+                    user.team = team
+                    user.agency = agency
                     user.is_active = serializer.data.get('is_active')
+                    user.is_agent = True
+                    user.common_parameters = common_parameters
                     user.save()
+        else:
+            try:
+                agency = Agency.objects.get(id=serializer.data.get('agency_id'))
+                common_parameter = agency.common_parameters
+                common_parameters = CommonParameters()
+                common_parameters.currency = common_parameter.currency
+                common_parameters.date_type = common_parameter.date_type
+                common_parameters.booking_enabled = common_parameter.booking_enabled
+                common_parameters.virtual_interlining = common_parameter.virtual_interlining
+                common_parameters.exclude_carriers = common_parameter.exclude_carriers
+                common_parameters.save()
+
+                if serializer.data.get('team_id'):
+                    try:
+                        team = Team.objects.get(id=serializer.data.get('team_id'))
+                        if emails:
+                            for email in emails:
+                                user = User()
+                                user.email = email
+                                user.username = email
+                                user.first_name = email
+                                user.last_name = email
+                                user.agency = agency
+                                user.team = team
+                                user.is_agent = True
+                                user.is_active = serializer.data.get('is_active')
+                                user.common_parameters = common_parameters
+                                user.save()
+                    except ObjectDoesNotExist:
+                        return Response(
+                            {
+                                "result": False,
+                                "data": {
+                                    "msg": "team_id is invalid."
+                                },
+                            },
+                        )
+                elif emails:
+                    for email in emails:
+                        user = User()
+                        user.email = email
+                        user.username = email
+                        user.first_name = email
+                        user.last_name = email
+                        user.agency = agency
+                        user.is_active = serializer.data.get('is_active')
+                        user.is_agent = True
+                        user.common_parameters = common_parameters
+                        user.save()
+            except ObjectDoesNotExist:
+                return Response(
+                    {
+                        "result": False,
+                        "data": {
+                            "msg": "agency_id is invalid."
+                        },
+                    },
+                )
 
         return Response(
             {

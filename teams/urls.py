@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import NameCheckView, AllTeamsView, TeamDetailView, AddTeamView, AllAgencyView, AddAgencyView, AllTeamsListView, \
     AgencyListView, TeamUpdateView, AgencyDetailView, AgencyUpdateView, DataSourceView, TeamAchieveView, \
-    AvailableDataSourceView, AgencyAchieveView
+    AvailableDataSourceView, AgencyAchieveView, AgencyTeamsListView
 
 app_name = 'teams'
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('name-check/', NameCheckView.as_view()),
     path('search/', AllTeamsView.as_view()),
     path('list/', AllTeamsListView.as_view()),
+    path('list/<int:pk>/', AgencyTeamsListView.as_view()),
     path('add/', AddTeamView.as_view()),
     path('<int:pk>/', TeamDetailView.as_view()),
     path('update/', TeamUpdateView.as_view()),
