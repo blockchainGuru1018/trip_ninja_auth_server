@@ -208,40 +208,42 @@ class TeamUpdateView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team = serializer.validated_data['team']
-        if user.is_superuser or team.admin == user or team.agency.admin == user:
-            team.admin = serializer.validated_data['team_lead']
-            team.is_booking = serializer.data.get('is_booking')
-            team.name = serializer.data.get('team_name')
-            team.save()
-            members = serializer.data.get('members')
-            if members:
-                User.objects.filter(team=team).update(team=None, is_agent=True)
-                User.objects.filter(id__in=members).update(team=team, is_agent=False)
-            number_of_users = User.objects.filter(id__in=members).count()
-
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "teams": {
-                            "team_id": team.id,
-                            "team_name": team.name,
-                            "team_leader": team.admin.username,
-                            "leader_id": team.admin.id,
-                            "is_booking": team.is_booking,
-                            "members": members,
-                            "number_of_users": number_of_users
-                        }
-                    }
-                },
-                status=status.HTTP_201_CREATED
-            )
+        admin = team.admin
+        admin.is_agent = True
+        admin.is_team_lead = False
+        admin.team_id = None
+        admin.save()
+        team.admin = serializer.validated_data['team_lead']
+        team.is_booking = serializer.data.get('is_booking')
+        team.name = serializer.data.get('team_name')
+        team.save()
+        members = serializer.data.get('members')
+        if members:
+            User.objects.filter(team=team).update(team=None, is_agent=True)
+            User.objects.filter(id__in=members).update(team=team, is_agent=True)
+        user = serializer.validated_data['team_lead']
+        user.is_team_lead = True
+        user.is_agent = False
+        user.team = team
+        user.save()
+        number_of_users = User.objects.filter(id__in=members).count()
 
         return Response(
             {
                 "result": True,
+                "data": {
+                    "teams": {
+                        "team_id": team.id,
+                        "team_name": team.name,
+                        "team_leader": team.admin.username,
+                        "leader_id": team.admin.id,
+                        "is_booking": team.is_booking,
+                        "members": members,
+                        "number_of_users": number_of_users
+                    }
+                }
             },
-            status=status.HTTP_403_FORBIDDEN
+            status=status.HTTP_201_CREATED
         )
 
 
@@ -274,6 +276,10 @@ class AddTeamView(GenericAPIView):
             members = serializer.data.get('members')
             if members:
                 User.objects.filter(id__in=members).update(team=team, agency=agency, is_agent=True)
+            user = serializer.validated_data['admin']
+            user.is_team_lead = True
+            user.is_agent = False
+            user.save()
         else:
             team = Team()
             team.name = serializer.data.get('team_name')
@@ -292,6 +298,10 @@ class AddTeamView(GenericAPIView):
             members = serializer.data.get('members')
             if members:
                 User.objects.filter(id__in=members).update(team=team, is_agent=False)
+            user = serializer.validated_data['admin']
+            user.is_team_lead = True
+            user.is_agent = False
+            user.save()
 
         return Response(
             {
@@ -344,6 +354,7 @@ class AllAgencyView(GenericAPIView):
             sea_agency.append({
                 **serialize_agency(agency),
                 "number_of_users": number_of_users,
+                "admin_id": agency.admin.id,
                 "api_username": agency.api_username,
                 "api_password": agency.api_password,
                 "data_source": data
@@ -376,6 +387,7 @@ class AllAgencyView(GenericAPIView):
             sea_agency.append({
                 **serialize_agency(sea),
                 "number_of_users": number_of_users,
+                "admin_id": sea.admin_id,
                 "api_username": sea.api_username,
                 "api_password": sea.api_password,
                 "data_source": data
@@ -419,13 +431,35 @@ class AddAgencyView(GenericAPIView):
     serializer_class = AgencyAddSerializer
 
     def post(self, request):
+        admin_id = None
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         agency = Agency()
         agency.name = serializer.data.get('agency_name')
         agency.api_username = serializer.data.get('api_username')
         agency.api_password = serializer.data.get('api_password')
-        agency.save()
+        if serializer.data.get('admin_id'):
+            try:
+                admin = User.objects.get(id=serializer.data.get('admin_id'))
+                agency.admin = admin
+                agency.save()
+                admin.is_agency_admin = True
+                admin.is_agent = False
+                admin.agency = agency
+                admin.save()
+                admin_id = serializer.data.get('admin_id')
+            except ObjectDoesNotExist:
+                return Response(
+                    {
+                        "result": False,
+                        "data": {
+                            "msg": "admin_id is invalid."
+                        }
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+        else:
+            agency.save()
         data_source = serializer.data.get('data_source')
         if data_source:
             for data in data_source:
@@ -451,6 +485,7 @@ class AddAgencyView(GenericAPIView):
                 "data": {
                     "agency": {
                         "agency_id": agency.id,
+                        "admin_id": admin_id,
                         "agency_name": agency.name,
                         "status": True,
                         "number_of_users": 0,
@@ -533,59 +568,79 @@ class AgencyUpdateView(GenericAPIView):
     serializer_class = AgencyUpdateSerializer
 
     def put(self, request):
-        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        admin_id = None
         agency = serializer.validated_data['agency']
-        if user.is_superuser or agency.admin == user:
-            agency.name = serializer.data.get('agency_name')
-            agency.api_username = serializer.data.get('api_username')
-            agency.api_password = serializer.data.get('api_password')
-            agency.save()
-            data_source = serializer.data.get('data_source')
-            if request.user.is_superuser:
-                DataSource.objects.filter(agency=agency).update(agency=None)
-                if data_source:
-                    for data in data_source:
-                        try:
-                            data_item = DataSource.objects.get(id=data['id'])
-                            data_item.pcc = data['pcc']
-                            data_item.agency = agency
-                            data_item.save()
-                        except ObjectDoesNotExist:
-                            return Response(
-                                {
-                                    "result": False,
-                                    "data": {
-                                        "msg": "data_source is invalid."
-                                    }
-                                },
-                                status=status.HTTP_201_CREATED
-                            )
-
-            return Response(
-                {
-                    "result": True,
-                    "data": {
-                        "agency": {
-                            "agency_id": agency.id,
-                            "agency_name": agency.name,
-                            "status": True,
-                            "number_of_users": 0,
-                            "api_username": agency.api_username,
-                            "api_password": agency.api_password,
-                            "data_source": data_source
+        agency.name = serializer.data.get('agency_name')
+        agency.api_username = serializer.data.get('api_username')
+        agency.api_password = serializer.data.get('api_password')
+        if agency.admin:
+            agency.admin.is_agent = True
+            agency.admin.is_agency_admin = False
+            agency.admin.agency_id = None
+            agency.admin.save()
+            agency.admin_id = None
+        if serializer.data.get('admin_id'):
+            try:
+                admin = User.objects.get(id=serializer.data.get('admin_id'))
+                agency.admin = admin
+                agency.save()
+                admin.is_agent = False
+                admin.is_agency_admin = True
+                admin.agency = agency
+                admin.save()
+                admin_id = serializer.data.get('admin_id')
+            except ObjectDoesNotExist:
+                return Response(
+                    {
+                        "result": False,
+                        "data": {
+                            "msg": "admin_id is invalid."
                         }
-                    }
-                },
-                status=status.HTTP_201_CREATED
-            )
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+        else:
+            agency.save()
+        data_source = serializer.data.get('data_source')
+        if request.user.is_superuser:
+            DataSource.objects.filter(agency=agency).update(agency=None)
+            if data_source:
+                for data in data_source:
+                    try:
+                        data_item = DataSource.objects.get(id=data['id'])
+                        data_item.pcc = data['pcc']
+                        data_item.agency = agency
+                        data_item.save()
+                    except ObjectDoesNotExist:
+                        return Response(
+                            {
+                                "result": False,
+                                "data": {
+                                    "msg": "data_source is invalid."
+                                }
+                            },
+                            status=status.HTTP_201_CREATED
+                        )
 
         return Response(
             {
                 "result": True,
+                "data": {
+                    "agency": {
+                        "agency_id": agency.id,
+                        "admin_id": admin_id,
+                        "agency_name": agency.name,
+                        "status": True,
+                        "number_of_users": 0,
+                        "api_username": agency.api_username,
+                        "api_password": agency.api_password,
+                        "data_source": data_source
+                    }
+                }
             },
-            status=status.HTTP_403_FORBIDDEN
+            status=status.HTTP_201_CREATED
         )
 
 

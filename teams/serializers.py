@@ -46,6 +46,7 @@ class TeamCreateSerializer(serializers.ModelSerializer):
 
 class AgencyAddSerializer(serializers.ModelSerializer):
     agency_name = serializers.CharField(required=True)
+    admin_id = serializers.IntegerField(required=False)
     api_username = serializers.CharField(required=False)
     api_password = serializers.CharField(required=False)
     data_source = serializers.ListField(required=False)
@@ -58,10 +59,11 @@ class AgencyAddSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ("agency_name", "api_username", "api_password", "data_source")
+        fields = ("agency_name", "api_username", "admin_id", "api_password", "data_source")
 
     def validate(self, attrs):
         agency_name = attrs.get("agency_name")
+        admin_id = attrs.get("admin_id")
         api_username = attrs.get("api_username")
         api_password = attrs.get("api_password")
 
@@ -162,6 +164,7 @@ class AgencySerializer(serializers.Serializer):
 
 class AgencyUpdateSerializer(serializers.ModelSerializer):
     agency_id = serializers.IntegerField(required=False)
+    admin_id = serializers.IntegerField(required=False)
     agency_name = serializers.CharField(required=True)
     api_username = serializers.CharField(required=False)
     api_password = serializers.CharField(required=False)
@@ -175,11 +178,12 @@ class AgencyUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = ("agency_id", "agency_name", "api_username", "api_password", "data_source")
+        fields = ("agency_id", "agency_name", "admin_id", "api_username", "api_password", "data_source")
 
     def validate(self, attrs):
         agency_id = attrs.get("agency_id")
         agency_name = attrs.get("agency_name")
+        admin_id = attrs.get("admin_id")
         api_username = attrs.get("api_username")
         api_password = attrs.get("api_password")
 
