@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from common.exception import CustomException
 
@@ -33,6 +34,7 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
     email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    password = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     team_id = serializers.IntegerField(required=False)
     agency_id = serializers.IntegerField(required=False)
     is_active = serializers.BooleanField(required=False)
@@ -43,12 +45,13 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
         'invalid_last_name': _('last_name is invalid.'),
         'invalid_team': _('team is invalid.'),
         'invalid_is_active': _('is_active is invalid.'),
-        'invalid_request': _('Request is invalid.')
+        'invalid_request': _('Request is invalid.'),
+        'invalid_password': _('Password must have at least 6 characters.'),
     }
 
     class Meta:
         model = User
-        fields = ("email", "first_name", "last_name", "team_id", "agency_id", "is_active")
+        fields = ("email", "first_name", "last_name", "team_id", "agency_id", "password", "is_active")
 
     def validate(self, attrs):
         email = attrs.get("email")
@@ -56,6 +59,7 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
         last_name = attrs.get("last_name")
         team_id = attrs.get("team_id")
         agency_id = attrs.get("agency_id")
+        password = attrs.get("password")
 
         if not email:
             raise CustomException(code=10, message=self.error_messages['invalid_email'])
@@ -63,6 +67,9 @@ class SingleAddUserSerializer(serializers.ModelSerializer):
             raise CustomException(code=12, message=self.error_messages['invalid_first_name'])
         if not last_name:
             raise CustomException(code=13, message=self.error_messages['invalid_last_name'])
+        if not password:
+            raise CustomException(code=14, message=self.error_messages['invalid_password'])
+        attrs['password'] = make_password(attrs['password'])
         return attrs
 
 
@@ -70,21 +77,27 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
     emails = serializers.ListField(required=False)
     team_id = serializers.IntegerField(required=False)
     agency_id = serializers.IntegerField(required=False)
+    password = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     is_active = serializers.BooleanField(required=False)
 
     default_error_messages = {
         'invalid_is_active': _('is_active is invalid.'),
+        'invalid_password': _('Password must have at least 6 characters.'),
     }
 
     class Meta:
         model = User
-        fields = ("emails", "team_id", "agency_id", "is_active")
+        fields = ("emails", "team_id", "agency_id", "is_active", "password")
 
     def validate(self, attrs):
         is_active = attrs.get("is_active")
+        password = attrs.get("password")
 
         if is_active is None:
             raise CustomException(code=11, message=self.error_messages['invalid_is_active'])
+        if not password:
+            raise CustomException(code=12, message=self.error_messages['invalid_password'])
+        attrs['password'] = make_password(attrs['password'])
 
         return attrs
 

@@ -277,6 +277,8 @@ class AddUserView(GenericAPIView):
         user.username = serializer.data.get('first_name') + " " + serializer.data.get('last_name')
         user.first_name = serializer.data.get('first_name')
         user.last_name = serializer.data.get('last_name')
+        if serializer.data.get('password'):
+            user.password = serializer.data.get('password')
         user.is_active = serializer.data.get('is_active')
         if request.user.is_agency_admin:
             agency = request.user.agency
@@ -417,6 +419,28 @@ class AvailableUsersListView(GenericAPIView):
         )
 
 
+class AvailableAdminListView(GenericAPIView):
+    permission_classes = IsSuperUser,
+
+    def get(self, request, pk):
+        agency = Agency.objects.get(id=pk)
+        user_list = User.objects.filter(Q(is_agent=True) | Q(agency=agency))
+        user_detail = []
+        for user in user_list:
+            user_detail.append({
+                **serialize_user(user)
+            })
+        return Response(
+            {
+                "result": True,
+                "data": {
+                    "users": user_detail
+                }
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+
 class BulkAddUserView(GenericAPIView):
     permission_classes = IsTeamLead,
     serializer_class = BulkAddUserSerializer
@@ -425,6 +449,9 @@ class BulkAddUserView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         emails = serializer.data.get('emails')
+        password = None
+        if serializer.data.get('password'):
+            password = serializer.data.get('password')
         if request.user.is_agency_admin:
             agency = request.user.agency
             common_parameter = agency.common_parameters
@@ -440,6 +467,7 @@ class BulkAddUserView(GenericAPIView):
                             user.last_name = email
                             user.team = team
                             user.agency = agency
+                            user.password = password
                             user.is_active = serializer.data.get('is_active')
                             user.is_agent = True
                             common_parameters = CommonParameters()
@@ -468,6 +496,7 @@ class BulkAddUserView(GenericAPIView):
                         user.username = email
                         user.first_name = email
                         user.last_name = email
+                        user.password = password
                         user.agency = agency
                         user.is_agent = True
                         user.is_active = serializer.data.get('is_active')
@@ -493,6 +522,7 @@ class BulkAddUserView(GenericAPIView):
                     user.last_name = email
                     user.team = team
                     user.agency = agency
+                    user.password = password
                     user.is_active = serializer.data.get('is_active')
                     user.is_agent = True
                     common_parameters = CommonParameters()
@@ -521,6 +551,7 @@ class BulkAddUserView(GenericAPIView):
                                 user.last_name = email
                                 user.agency = agency
                                 user.team = team
+                                user.password = password
                                 user.is_agent = True
                                 user.is_active = serializer.data.get('is_active')
                                 common_parameters = CommonParameters()
@@ -549,6 +580,7 @@ class BulkAddUserView(GenericAPIView):
                         user.first_name = email
                         user.last_name = email
                         user.agency = agency
+                        user.password = password
                         user.is_active = serializer.data.get('is_active')
                         user.is_agent = True
                         common_parameters = CommonParameters()

@@ -190,8 +190,8 @@ class ChangePasswordSerializer(serializers.Serializer):
             raise CustomException(code=11, message=self.error_messages['invalid_password'])
 
         user = User.objects.get(pk=user_id)
-        if user.current_password:
-            attrs['new_password'] = attrs['new_password']
+        if user.check_password(current_password):
+            attrs['new_password'] = make_password(attrs['new_password'])
             return attrs
         else:
             raise CustomException(code=10, message=self.error_messages['invalid_current_password'])
