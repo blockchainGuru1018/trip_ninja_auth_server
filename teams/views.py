@@ -477,21 +477,22 @@ class AddAgencyView(GenericAPIView):
         data_source = serializer.data.get('data_source')
         if data_source:
             for data in data_source:
-                try:
-                    data_item = DataSource.objects.get(id=data['id'])
-                    data_item.pcc = data['pcc']
-                    data_item.agency = agency
-                    data_item.save()
-                except ObjectDoesNotExist:
-                    return Response(
-                        {
-                            "result": False,
-                            "data": {
-                                "msg": "data_source is invalid."
-                            }
-                        },
-                        status=status.HTTP_201_CREATED
-                    )
+                if data:
+                    try:
+                        data_item = DataSource.objects.get(id=data['id'])
+                        data_item.pcc = data['pcc']
+                        data_item.agency = agency
+                        data_item.save()
+                    except ObjectDoesNotExist:
+                        return Response(
+                            {
+                                "result": False,
+                                "data": {
+                                    "msg": "data_source is invalid."
+                                }
+                            },
+                            status=status.HTTP_201_CREATED
+                        )
 
         return Response(
             {
