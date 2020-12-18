@@ -31,17 +31,9 @@ class TeamCreateSerializer(serializers.ModelSerializer):
 
         if not name:
             raise CustomException(code=10, message=self.error_messages['invalid_name'])
-        if not admin_id:
-            raise CustomException(code=11, message=self.error_messages['invalid_admin'])
         if is_booking is None:
             raise CustomException(code=12, message=self.error_messages['invalid_booking'])
-
-        try:
-            admin = User.objects.get(id=admin_id)
-            attrs['admin'] = admin
-            return attrs
-        except ObjectDoesNotExist:
-            raise CustomException(code=11, message=self.error_messages['invalid_admin'])
+        return attrs
 
 
 class AgencyAddSerializer(serializers.ModelSerializer):
@@ -122,7 +114,6 @@ class TeamUpdateSerializer(serializers.ModelSerializer):
         team_id = attrs.get("team_id")
         team_name = attrs.get("team_name")
         is_booking = attrs.get("is_booking")
-        admin_id = attrs.get("admin_id")
 
         if team_id is None:
             raise CustomException(code=10, message=self.error_messages['invalid_team_id'])
@@ -130,11 +121,8 @@ class TeamUpdateSerializer(serializers.ModelSerializer):
             raise CustomException(code=11, message=self.error_messages['invalid_team_name'])
         if is_booking is None:
             raise CustomException(code=12, message=self.error_messages['invalid_is_booking'])
-        if admin_id is None:
-            raise CustomException(code=13, message=self.error_messages['invalid_admin_id'])
 
         try:
-            attrs['team_lead'] = User.objects.get(id=admin_id)
             attrs['team'] = Team.objects.get(id=team_id)
             return attrs
         except ObjectDoesNotExist:

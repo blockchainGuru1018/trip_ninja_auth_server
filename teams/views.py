@@ -204,7 +204,6 @@ class TeamUpdateView(GenericAPIView):
     serializer_class = TeamUpdateSerializer
 
     def put(self, request):
-        user = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         team = serializer.validated_data['team']
@@ -213,7 +212,8 @@ class TeamUpdateView(GenericAPIView):
         admin.is_team_lead = False
         admin.team_id = None
         admin.save()
-        team.admin = serializer.validated_data['team_lead']
+        if serializer.data.get('admin_id'):
+            team.admin = User.objects.get(id=serializer.data.get('admin_id'))
         team.is_booking = serializer.data.get('is_booking')
         team.name = serializer.data.get('team_name')
         team.save()
@@ -221,11 +221,12 @@ class TeamUpdateView(GenericAPIView):
         if members:
             User.objects.filter(team=team).update(team=None, is_agent=True)
             User.objects.filter(id__in=members).update(team=team, is_agent=True)
-        user = serializer.validated_data['team_lead']
-        user.is_team_lead = True
-        user.is_agent = False
-        user.team = team
-        user.save()
+        if serializer.data.get('admin_id'):
+            user = User.objects.get(id=serializer.data.get('admin_id'))
+            user.is_team_lead = True
+            user.is_agent = False
+            user.team = team
+            user.save()
         number_of_users = User.objects.filter(id__in=members).count()
 
         return Response(
@@ -261,8 +262,9 @@ class AddTeamView(GenericAPIView):
 
             team = Team()
             team.name = serializer.data.get('team_name')
-            team.admin = serializer.validated_data['admin']
-            team.is_booking = serializer.validated_data['is_booking']
+            if serializer.data.get('admin_id'):
+                team.admin = User.objects.get(id=serializer.data.get('admin_id'))
+            team.is_booking = serializer.data.get('is_booking')
 
             common_parameters = CommonParameters()
             common_parameters.currency = common_parameter.currency
@@ -276,15 +278,17 @@ class AddTeamView(GenericAPIView):
             members = serializer.data.get('members')
             if members:
                 User.objects.filter(id__in=members).update(team=team, agency=agency, is_agent=True)
-            user = serializer.validated_data['admin']
-            user.is_team_lead = True
-            user.is_agent = False
-            user.save()
+            if serializer.data.get('admin_id'):
+                user = User.objects.get(id=serializer.data.get('admin_id'))
+                user.is_team_lead = True
+                user.is_agent = False
+                user.save()
         else:
             team = Team()
             team.name = serializer.data.get('team_name')
-            team.admin = serializer.validated_data['admin']
-            team.is_booking = serializer.validated_data['is_booking']
+            if serializer.data.get('admin_id'):
+                team.admin = User.objects.get(id=serializer.data.get('admin_id'))
+            team.is_booking = serializer.data.get('is_booking')
 
             common_parameters = CommonParameters()
             common_parameters.currency = 'USD'
@@ -298,10 +302,11 @@ class AddTeamView(GenericAPIView):
             members = serializer.data.get('members')
             if members:
                 User.objects.filter(id__in=members).update(team=team, is_agent=False)
-            user = serializer.validated_data['admin']
-            user.is_team_lead = True
-            user.is_agent = False
-            user.save()
+            if serializer.data.get('admin_id'):
+                user = User.objects.get(id=serializer.data.get('admin_id'))
+                user.is_team_lead = True
+                user.is_agent = False
+                user.save()
 
         return Response(
             {
