@@ -23,7 +23,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             'Username may only contain alphanumeric characters, and must be no more than 40 characters.'),
         'invalid_first_name': _('Your first_name is required.'),
         'invalid_last_name': _('Your last_name is required.'),
-        'invalid_password': _('Password must have at least 6 characters.'),
+        'invalid_password': _('Password is invalid.'),
     }
 
     class Meta:
@@ -143,7 +143,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     default_error_messages = {
         'invalid_token': _('Token is invalid.'),
         'inactive_account': _('User account is disabled.'),
-        'invalid_password': _('Password must have at least 6 characters.'),
+        'invalid_password': _('Password is invalid.'),
     }
 
     def validate(self, attrs):
@@ -175,7 +175,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     default_error_messages = {
         'invalid_current_password': _('Current_password is incorrect.'),
-        'invalid_password': _('Password must have at least 6 characters.'),
+        'invalid_password': _('Password is invalid.'),
         'invalid_user': _('User is invalid'),
     }
 
@@ -186,7 +186,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 
         if not current_password:
             raise CustomException(code=10, message=self.error_messages['invalid_current_password'])
-        if not new_password or len(new_password) < 6:
+        if not new_password:
             raise CustomException(code=11, message=self.error_messages['invalid_password'])
 
         user = User.objects.get(pk=user_id)
