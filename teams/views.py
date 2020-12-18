@@ -443,6 +443,15 @@ class AddAgencyView(GenericAPIView):
         agency.name = serializer.data.get('agency_name')
         agency.api_username = serializer.data.get('api_username')
         agency.api_password = serializer.data.get('api_password')
+
+        common_parameters = CommonParameters()
+        common_parameters.currency = "USD"
+        common_parameters.date_type = "dd/mm/yyyy"
+        common_parameters.booking_enabled = True
+        common_parameters.virtual_interlining = True
+        common_parameters.exclude_carriers = 1
+        common_parameters.save()
+        agency.common_parameters = common_parameters
         if serializer.data.get('admin_id'):
             try:
                 admin = User.objects.get(id=serializer.data.get('admin_id'))
