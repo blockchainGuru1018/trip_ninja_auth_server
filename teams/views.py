@@ -411,7 +411,7 @@ class AllAgencyView(GenericAPIView):
 
 
 class AgencyListView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request):
         agency_list = Agency.objects.all()
@@ -772,7 +772,7 @@ class AvailableDataSourceView(GenericAPIView):
 
 
 class AgencyTeamsListView(GenericAPIView):
-    permission_classes = IsSuperUser,
+    permission_classes = IsAgencyAdmin,
 
     def get(self, request, pk):
         team_list = Team.objects.filter(agency=pk)

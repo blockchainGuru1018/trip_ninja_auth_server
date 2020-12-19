@@ -244,10 +244,18 @@ class SearchDetailView(GenericAPIView):
             else:
                 team_name = sea.team.name
                 team_id = sea.team.id
+            if sea.agency is None:
+                agency_name = None
+                agency_id = None
+            else:
+                agency_name = sea.agency.name
+                agency_id = sea.agency.id
             sea_users.append({
                 **serialize_user(sea),
                 "email": sea.email,
                 "phone_number": sea.phone_number,
+                "agency_id": agency_id,
+                "agency_name": agency_name,
                 "team_id": team_id,
                 "team_name": team_name,
                 "is_active": sea.is_active,
@@ -633,7 +641,7 @@ class UserUpdateView(GenericAPIView):
     serializer_class = UserUpdateSerializer
 
     def put(self, request):
-        team_id = team_name = None
+        team_id = team_name = agency_id = agency_name = None
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -646,10 +654,17 @@ class UserUpdateView(GenericAPIView):
             user.team = Team.objects.get(id=serializer.data.get('team_id'))
             team_id = user.team.id
             team_name = user.team.name
+        if serializer.data.get('agency_id'):
+            user.agency = Agency.objects.get(id=serializer.data.get('agency_id'))
+            agency_id = user.agency.id
+            agency_name = user.agency.name
         user.save()
         if not user.team:
             team_id = None
             team_name = None
+        if not user.agency:
+            agency_id = None
+            agency_name = None
 
         return Response(
             {
@@ -662,6 +677,8 @@ class UserUpdateView(GenericAPIView):
                         "is_active": user.is_active,
                         "team_id": team_id,
                         "team_name": team_name,
+                        "agency_id": agency_id,
+                        "agency_name": agency_name,
                         "role": "Team Lead"
                     }
                 }

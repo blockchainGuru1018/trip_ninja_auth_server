@@ -105,6 +105,7 @@ class BulkAddUserSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(required=False)
     team_id = serializers.IntegerField(required=False)
+    agency_id = serializers.IntegerField(required=False)
     first_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
@@ -122,7 +123,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("user_id", "team_id", "first_name", "last_name", "email", "phone_number", "is_active")
+        fields = ("user_id", "team_id", "agency_id", "first_name", "last_name", "email", "phone_number", "is_active")
 
     def validate(self, attrs):
         user_id = attrs.get("user_id")
