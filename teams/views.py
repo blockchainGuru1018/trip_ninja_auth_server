@@ -78,6 +78,7 @@ class AllTeamsView(GenericAPIView):
             item = []
             item.append({
                 **serialize_team(team),
+                "agency_name": team.agency.name,
                 "leader_id": team.admin.id,
                 "is_booking": team.is_booking,
                 "members": members,
@@ -101,6 +102,7 @@ class AllTeamsView(GenericAPIView):
                 **serialize_team(sea),
                 "leader_id": sea.admin.id,
                 "is_booking": sea.is_booking,
+                "agency_name": sea.agency.name,
                 "members": members,
                 "number_of_users": number_of_users
             })
@@ -124,9 +126,7 @@ class AllTeamsListView(GenericAPIView):
             team_list = Team.objects.all()
         else:
             agency = Agency.objects.get(admin=request.user)
-            print(agency)
             team_list = Team.objects.filter(agency=agency)
-            print(team_list)
         team_detail = []
         for team in team_list:
             team_detail.append({
