@@ -1,12 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status
+from rest_framework import status, permissions
 import uuid
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_auth.views import LoginView, LogoutView
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
 from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
     ChangePasswordSerializer
 from users.models import User
@@ -136,3 +137,41 @@ class ChangePasswordView(CreateAPIView):
         user.save()
 
         return Response({"result": True}, status=status.HTTP_200_OK)
+
+
+class UserDetailsView(CreateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def get(self, request):
+        user = request.user
+        user_data = {
+            'user_email': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'date_type': user.date_type,
+            'currency': user.currency,
+            'student_and_youth': user.student_and_youth,
+            'pcc': user.pcc,
+            'provider': user.provider,
+            'agency': request.user.group,
+            'ticketing_queue': request.user.queue,
+            'is_group_admin': request.user.is_group_admin,
+            'is_superuser': request.user.is_superuser,
+            'booking_disabled': request.user.disable_booking,
+            'virtual_interlining': request.user.virtual_interlining,
+            'view_pnr_pricing': request.user.view_pnr_pricing,
+            'markup_visible': request.user.markup_visible
+        }
+        return Response(user_data, status=status.HTTP_200_OK)
+
+#class SearchFlightsView(CreateAPIView):
+#    
+#    def post(self, request):
+#        search_result = search(request.user, request.data)
+#        return Response(search_result, status=status.HTTP_200_OK)
+
+
+#class PriceFlightsView(CreateAPIView):
+#
+#    def post(self, request):
+#        price_result = price(request.user, request.data)
+#        return Response(price_result, status=status.HTTP_200_OK)
