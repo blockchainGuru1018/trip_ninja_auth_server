@@ -17,7 +17,7 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('token/', TokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
-    #path('get_user_details/', UserDetailsView.as_view()), # TODO rename and refactor
+    path('get_user_details/', UserDetailsView.as_view()), # TODO rename and refactor
     #path('search/'),
     #path('price/'),
     #path('price-map/'),
