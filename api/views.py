@@ -1,13 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import status, permissions
+from rest_framework import status
 import uuid
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_auth.views import LoginView, LogoutView
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
 from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
     ChangePasswordSerializer
 from users.models import User
@@ -140,7 +138,7 @@ class ChangePasswordView(CreateAPIView):
 
 
 class UserDetailsView(CreateAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
+
     def get(self, request):
         user = request.user
         user_data = {
