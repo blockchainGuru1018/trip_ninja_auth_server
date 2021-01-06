@@ -1,6 +1,5 @@
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.db import models
-
 from common.models import CommonParameters
 from teams.models import Agency, Team
 
@@ -28,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     booking_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
     password_reset_token = models.CharField(null=True, max_length=100)
     password_reset_sent_at = models.DateTimeField(null=True)
-
+    objects = UserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 

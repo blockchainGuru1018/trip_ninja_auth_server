@@ -23,3 +23,5 @@ ipython
 sentry-sdk
 requests
 django-cors-headers==3.4.0
+djangorestframework-simplejwt==4.4.0
+pyjwt==1.7.1
