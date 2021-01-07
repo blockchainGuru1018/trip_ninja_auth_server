@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.conf import settings
 from rest_framework import status, permissions
 import uuid
 from rest_framework.generics import CreateAPIView, GenericAPIView
@@ -11,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
     ChangePasswordSerializer
 from users.models import User
+from api.service import add_common_parameters, send_api_request, get_user_queue
 
 
 class UserLoginView(LoginView):
@@ -65,7 +67,6 @@ class ForgotPasswordView(CreateAPIView):
         token = None
 
         username = serializer.data.get('username')
-        print(username)
         if '@' in username:
             kwargs = {'email': username}
         else:
@@ -73,10 +74,8 @@ class ForgotPasswordView(CreateAPIView):
 
         try:
             user = User.objects.get(**kwargs)
-            print(user.username)
             if user.is_active:
                 token = uuid.uuid4()
-                print(token)
                 user.password_reset_token = token
                 user.password_reset_sent_at = datetime.now()
                 user.save()
@@ -147,31 +146,90 @@ class UserDetailsView(GenericAPIView):
             'user_email': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'date_type': user.date_type,
-            'currency': user.currency,
-            'student_and_youth': user.student_and_youth,
-            'pcc': user.pcc,
-            'provider': user.provider,
-            'agency': request.user.group,
-            'ticketing_queue': request.user.queue,
-            'is_group_admin': request.user.is_group_admin,
-            'is_superuser': request.user.is_superuser,
-            'booking_disabled': request.user.disable_booking,
-            'virtual_interlining': request.user.virtual_interlining,
-            'view_pnr_pricing': request.user.view_pnr_pricing,
-            'markup_visible': request.user.markup_visible
+            'date_type': user.common_parameters.date_type,
+            'currency': user.common_parameters.currency,
+            'student_and_youth': user.agency.student_and_youth,
+            'agency': user.agency.name,
+            'ticketing_queue': get_user_queue(user), #TODO this should moved to credentials obj for multi-datasource bookings
+            'is_agency_admin': user.is_agency_admin,
+            'is_superuser': user.is_superuser,
+            'booking_enabled': user.common_parameters.booking_enabled,
+            'virtual_interlining': user.common_parameters.virtual_interlining,
+            'view_pnr_pricing': user.common_parameters.view_pnr_pricing,
+            'markup_visible': user.common_parameters.markup_visible
         }
         return Response(user_data, status=status.HTTP_200_OK)
 
-#class SearchFlightsView(CreateAPIView):
-#    
-#    def post(self, request):
-#        search_result = search(request.user, request.data)
-#        return Response(search_result, status=status.HTTP_200_OK)
+
+class SearchFlightsView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'search/' + request.user.search_endpoint + '/'
+        search_request = add_common_parameters(request.data, request.user)
+        search_result = send_api_request('POST', url, request.user, search_request)
+        return Response(search_result, status=status.HTTP_200_OK)
 
 
-#class PriceFlightsView(CreateAPIView):
-#
-#    def post(self, request):
-#        price_result = price(request.user, request.data)
-#        return Response(price_result, status=status.HTTP_200_OK)
+class PriceMapView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'price-map/'
+        price_map_response = send_api_request('GET', url, request.user, request.data)
+        return Response(price_map_response, status=status.HTTP_200_OK)
+
+
+class PriceFlightsView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'price/' + request.user.search_endpoint + '/'
+        price_result = send_api_request('POST', url, request.user, request.data)
+        return Response(price_result, status=status.HTTP_200_OK)
+
+
+class BookView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'book/' + request.user.booking_endpoint + '/'
+        book_result = send_api_request('POST', url, request.user, request.data)
+        return Response(book_result, status=status.HTTP_200_OK)
+
+
+class QueueView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'queue/'
+        response = send_api_request('POST', url, request.user, request.data)
+        return Response(response, status=response.status_code)
+
+
+class TicketView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'ticket/'
+        response = send_api_request('POST', url, request.user, request.data)
+        return Response(response, status=response.status_code)
+
+
+class CancelView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def post(self, request):
+        url = settings.URL + 'book/'
+        response = send_api_request('DELETE', url, request.user, request.data)
+        return Response(response, status=response.status_code)
+
+
+class BookingsListView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def get(self, request):
+        url = settings.URL + request.get_full_path()[8:]
+        booking_list = send_api_request('GET', url, request.user, request.data)
+        return Response(booking_list, status=status.HTTP_200_OK)
+
+
+class BookingDetailsView(GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+    def get(self, request):
+        url = settings.URL + request.get_full_path()[8:]
+        booking_detail = send_api_request('GET', url, request.user, request.data)
+        return Response(booking_detail, status=status.HTTP_200_OK)
+

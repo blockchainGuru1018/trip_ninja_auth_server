@@ -3,7 +3,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import UserLoginView, UserRegistrationView, ForgotPasswordView, ConfirmTokenView, ResetPasswordView, \
-    ChangePasswordView, UserLogoutView, UserDetailsView
+    ChangePasswordView, UserLogoutView, UserDetailsView, SearchFlightsView, PriceFlightsView, BookView, \
+    PriceMapView, QueueView, TicketView, CancelView, BookingDetailsView, BookingsListView
 
 app_name = 'api'
 urlpatterns = [
@@ -17,16 +18,16 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('token/', TokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
-    path('get_user_details/', UserDetailsView.as_view()), # TODO rename and refactor
-    #path('search/'),
-    #path('price/'),
-    #path('price-map/'),
-    #path('book/'),
-    #path('queue/'),
-    #path('ticket/'),
-    #path('cancel/'),
-    #path('book/list/'),
-    #path('book/trip/\w*/'),
+    path('user-details/', UserDetailsView.as_view()),
+    path('search/', SearchFlightsView.as_view()),
+    path('price/', PriceFlightsView.as_view()),
+    path('price-map/', PriceMapView.as_view()),
+    path('book/', BookView.as_view()),
+    path('queue/', QueueView.as_view()),
+    path('ticket/', TicketView.as_view()),
+    path('cancel/', CancelView.as_view()),
+    path('book/list/', BookingsListView.as_view()),
+    re_path('book/trip/\w+/', BookingDetailsView.as_view()),
     re_path(r'^users/', include('users.urls')),
     re_path(r'^teams/', include('teams.urls')),
 ]
