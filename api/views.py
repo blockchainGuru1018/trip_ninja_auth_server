@@ -164,7 +164,7 @@ class UserDetailsView(GenericAPIView):
 class SearchFlightsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'search/' + request.user.search_endpoint + '/'
+        url = settings.API_URL + 'search/' + request.user.search_endpoint + '/'
         search_request = add_common_parameters(request.data, request.user)
         search_result = send_api_request('POST', url, request.user, search_request)
         return Response(search_result, status=status.HTTP_200_OK)
@@ -173,7 +173,7 @@ class SearchFlightsView(GenericAPIView):
 class PriceMapView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'price-map/'
+        url = settings.API_URL + 'price-map/'
         price_map_response = send_api_request('GET', url, request.user, request.data)
         return Response(price_map_response, status=status.HTTP_200_OK)
 
@@ -181,7 +181,7 @@ class PriceMapView(GenericAPIView):
 class PriceFlightsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'price/' + request.user.search_endpoint + '/'
+        url = settings.API_URL + 'price/' + request.user.search_endpoint + '/'
         price_result = send_api_request('POST', url, request.user, request.data)
         return Response(price_result, status=status.HTTP_200_OK)
 
@@ -189,7 +189,7 @@ class PriceFlightsView(GenericAPIView):
 class BookView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'book/' + request.user.booking_endpoint + '/'
+        url = settings.API_URL + 'book/' + request.user.booking_endpoint + '/'
         book_result = send_api_request('POST', url, request.user, request.data)
         return Response(book_result, status=status.HTTP_200_OK)
 
@@ -197,7 +197,7 @@ class BookView(GenericAPIView):
 class QueueView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'queue/'
+        url = settings.API_URL + 'queue/'
         response = send_api_request('POST', url, request.user, request.data)
         return Response(response, status=response.status_code)
 
@@ -205,7 +205,7 @@ class QueueView(GenericAPIView):
 class TicketView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'ticket/'
+        url = settings.API_URL + 'ticket/'
         response = send_api_request('POST', url, request.user, request.data)
         return Response(response, status=response.status_code)
 
@@ -213,7 +213,7 @@ class TicketView(GenericAPIView):
 class CancelView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
-        url = settings.URL + 'book/'
+        url = settings.API_URL + 'book/'
         response = send_api_request('DELETE', url, request.user, request.data)
         return Response(response, status=response.status_code)
 
@@ -221,7 +221,7 @@ class CancelView(GenericAPIView):
 class BookingsListView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def get(self, request):
-        url = settings.URL + request.get_full_path()[8:]
+        url = settings.API_URL + request.get_full_path()[8:]
         booking_list = send_api_request('GET', url, request.user, request.data)
         return Response(booking_list, status=status.HTTP_200_OK)
 
@@ -229,7 +229,7 @@ class BookingsListView(GenericAPIView):
 class BookingDetailsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def get(self, request):
-        url = settings.URL + request.get_full_path()[8:]
+        url = settings.API_URL + request.get_full_path()[8:]
         booking_detail = send_api_request('GET', url, request.user, request.data)
         return Response(booking_detail, status=status.HTTP_200_OK)
 
