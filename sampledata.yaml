@@ -19,7 +19,7 @@
 - model: users.User
   pk: 1
   fields:
-    password: 12345
+    password: pbkdf2_sha256$216000$MFhlwy0cRwFl$14q65c9a8CCdRwg09WM/p9iv3+q0171zyiS+49Bxz7c=
     email: testing1@tripninja.io
     username: superuser
     first_name: Trip
@@ -37,7 +37,7 @@
 - model: users.User
   pk: 2
   fields:
-    password: 12345
+    password: pbkdf2_sha256$216000$MFhlwy0cRwFl$14q65c9a8CCdRwg09WM/p9iv3+q0171zyiS+49Bxz7c=
     email: testing2@tripninja.io
     username: testing2
     first_name: Trip
