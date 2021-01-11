@@ -3,10 +3,10 @@ from decouple import config
 
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', False)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'asdfasdfasdfasdfasdfasdfs'
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '127.0.0.2', '192.168.0.103']
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = "users.User"
 
