@@ -352,7 +352,7 @@ channels:
     - xmltodict==0.10.2
     - zope.interface==4.3.3
 global:
-  application_name: QuickTrip
+  application_name: AuthServer
   branch: null
   default_ec2_keyname: null
   default_platform: python-3.6
@@ -365,5 +365,5 @@ global:
   repository: null
   sc: git
   workspace_type: Application
-name: QuickTrip
+name: AuthServer
 prefix: /
