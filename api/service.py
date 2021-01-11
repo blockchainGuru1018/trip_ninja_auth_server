@@ -67,5 +67,4 @@ def add_common_parameters(trip, user):
     return trip
 
 def get_user_queue(user):
-    data_sources = DataSource.objects.all().filter(agency=user.agency)
-    return data_sources[0].queue
+    return user.agency.datasource.first().queue
