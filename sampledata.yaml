@@ -19,7 +19,7 @@
 - model: users.User
   pk: 1
   fields:
-    password: pbkdf2_sha256$216000$MFhlwy0cRwFl$14q65c9a8CCdRwg09WM/p9iv3+q0171zyiS+49Bxz7c=
+    password: pbkdf2_sha256$36000$76roGiHU2MHL$ckMFlHY5Y63haaU+iqy/f5eeTiwJluC9hKu2hk6yXB0=
     email: testing1@tripninja.io
     username: superuser
     first_name: Trip
@@ -37,7 +37,7 @@
 - model: users.User
   pk: 2
   fields:
-    password: pbkdf2_sha256$216000$MFhlwy0cRwFl$14q65c9a8CCdRwg09WM/p9iv3+q0171zyiS+49Bxz7c=
+    password: pbkdf2_sha256$36000$76roGiHU2MHL$ckMFlHY5Y63haaU+iqy/f5eeTiwJluC9hKu2hk6yXB0=
     email: testing2@tripninja.io
     username: testing2
     first_name: Trip
@@ -85,6 +85,7 @@
     provider: 1V
     pcc: 2G3C
     name: travelport
+    agency_id: 1
 
 - model: teams.DataSource
   pk: 2
@@ -94,6 +95,7 @@
     provider: 1G
     pcc: 8YE2
     name: travelport
+    agency_id: 1
 
 - model: teams.DataSource
   pk: 3
@@ -103,6 +105,7 @@
     provider: 1P
     pcc: AE1
     name: travelport
+    agency_id: 1
 
 - model: teams.DataSource
   pk: 4
@@ -112,3 +115,4 @@
     provider: 1A
     pcc: MIA1S38BL
     name: amadeus
+    agency_id: 1
