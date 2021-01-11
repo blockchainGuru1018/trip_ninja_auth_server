@@ -190,7 +190,9 @@ class BookView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def post(self, request):
         url = settings.API_URL + 'book/' + request.user.booking_endpoint + '/'
-        book_result = send_api_request('POST', url, request.user, request.data)
+        book_request = request.data
+        book_request['consolidate_ticket'] = request.user.common_parameters.consolidate_ticket
+        book_result = send_api_request('POST', url, request.user, book_request)
         return Response(book_result, status=status.HTTP_200_OK)
 
 

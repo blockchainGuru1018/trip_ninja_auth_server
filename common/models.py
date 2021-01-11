@@ -23,6 +23,7 @@ class CommonParameters(models.Model):
     markup = models.BooleanField(default=True)
     markup_visible = models.BooleanField(default=False)
     markup_by_itinerary = models.BooleanField(default=False)
+    consolidate_ticket = models.BooleanField(default=False)
     exclude_carriers = JSONField(max_length=255, default=dict, blank=True)
     DATE_CHOICES = ("USA", "UK", "CAD", "INR")
 
