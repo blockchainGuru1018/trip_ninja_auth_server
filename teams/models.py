@@ -7,8 +7,8 @@ class Agency(BaseModel):
 
     name = models.CharField(max_length=100, default=False)
     amadeus_branded_fares = models.BooleanField(default=False)
-    api_username = models.CharField(max_length=40, default="trialaccount")
-    api_password = models.CharField(max_length=40, default="p#F91Snf#Pr3Yr")
+    api_username = models.CharField(max_length=40, default="testing1")
+    api_password = models.CharField(max_length=40, default="W#2fG*jMe(l")
     style_group = models.CharField(max_length=20, null=True)
     is_active = models.BooleanField(default=True)
     is_iframe = models.BooleanField(default=True)
