@@ -23,8 +23,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_team_lead = models.BooleanField(default=False)
     is_agency_admin = models.BooleanField(default=False)
     ENDPOINT_CHOICES = [("prod", "prod"), ("preprod", "preprod")]
-    search_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
-    booking_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="prod")
+    search_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="preprod")
+    booking_endpoint = models.CharField(max_length=8, choices=ENDPOINT_CHOICES, default="preprod")
     password_reset_token = models.CharField(null=True, max_length=100)
     password_reset_sent_at = models.DateTimeField(null=True)
     objects = UserManager()

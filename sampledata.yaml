@@ -59,7 +59,8 @@
     updated_at: 2020-11-09 05:16:33
     name: agency_1
     amadeus_branded_fares: true
-    api_username: admin
+    api_username: testing1
+    api_password: W#2fG*jMe(l
     style_group: style_group
     is_iframe: false
     student_and_youth: true
