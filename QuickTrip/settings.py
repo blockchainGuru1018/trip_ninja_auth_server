@@ -95,6 +95,8 @@ DATABASES = {
     }
 }
 
+API_URL = 'http://127.0.0.1:8000/'
+
 if ENVIRONMENT == 'production':
     DEBUG = False
     SECRET_KEY = os.getenv('SECRET_KEY')
@@ -106,6 +108,7 @@ if ENVIRONMENT == 'production':
     SECURE_REDIRECT_EXEMPT = []
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    API_URL = os.getenv('API_URL')
 
 
 REST_AUTH_SERIALIZERS = {
