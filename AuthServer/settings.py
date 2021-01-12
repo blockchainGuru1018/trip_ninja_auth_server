@@ -75,6 +75,10 @@ TEMPLATES = [
     },
 ]
 
+WSGI_APPLICATION = 'AuthServer.wsgi.application'
+
+LOCAL_DEV_URL = 'http://127.0.0.2:8000/'
+
 SITE_ID = 1
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -82,6 +86,8 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
+CSRF_COOKIE_DOMAIN = LOCAL_DEV_URL
+
 STATIC_URL = '/static/'
 STATIC_ROOT = '/static/'
 STATICFILES_DIRS = [
@@ -103,16 +109,7 @@ if 'RDS_DB_NAME' in os.environ:
         }
     }
 
-    MIDDLEWARE += [
-        'aws_xray_sdk.ext.django.middleware.XRayMiddleware',
-        'django.middleware.security.SecurityMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware'
-        ]
+    API_URL = os.getenv('API_URL')
 else:
     DATABASES = {
         "default": {
@@ -124,11 +121,9 @@ else:
             'PORT': config('DB_PORT'),
         }
     }
+    API_URL = 'http://127.0.0.1:8000/'
 
 
-
-
-API_URL = 'http://127.0.0.1:8000/'
 
 if ENVIRONMENT == 'production':
     DEBUG = False

@@ -7,7 +7,6 @@ from django.conf.urls import url
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r"^api/v1/", include('api.urls')),
-    url(r'^health/?', include('health_check.urls')),
 ]
 
 if settings.DEBUG:
