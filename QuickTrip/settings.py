@@ -6,7 +6,7 @@ ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 DEBUG = True
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'asdfasdfasdfasdfasdfasdfs'
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '192.168.0.103']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '127.0.0.2', '192.168.0.103']
 
 AUTH_USER_MODEL = "users.User"
 
@@ -87,13 +87,15 @@ FIXTURE_DIRS = ['fixtures']
 DATABASES = {
     "default": {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': 'trip_ninja',
+        'USER': 'kieranmcclymont',
+        'PASSWORD': '12345',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+API_URL = 'http://127.0.0.1:8000/'
 
 if ENVIRONMENT == 'production':
     DEBUG = False
@@ -106,6 +108,7 @@ if ENVIRONMENT == 'production':
     SECURE_REDIRECT_EXEMPT = []
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    API_URL = os.getenv('API_URL')
 
 
 REST_AUTH_SERIALIZERS = {
@@ -117,5 +120,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
