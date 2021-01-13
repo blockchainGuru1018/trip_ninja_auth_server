@@ -86,9 +86,13 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
+CSRF_TRUSTED_ORIGINS = [".elasticbeanstalk.com", ".tripninja.io"]
 CSRF_COOKIE_DOMAIN = LOCAL_DEV_URL
+CSRF_USE_SESSION = True
+CSRF_COOKIE_NAME = 'csrf_token'
+CSRF_COOKIE_SECURE = False
 
-STATIC_URL = '/static/'
+STATIC_URL = './static/'
 STATIC_ROOT = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
