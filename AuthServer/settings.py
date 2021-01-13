@@ -113,6 +113,33 @@ if 'RDS_DB_NAME' in os.environ:
         }
     }
 
+    #AWS X-Ray
+    MIDDLEWARE += [
+        'aws_xray_sdk.ext.django.middleware.XRayMiddleware',
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    ]
+
+    INSTALLED_APPS += ['aws_xray_sdk.ext.django']
+
+    XRAY_RECORDER = {
+        'AWS_XRAY_DAEMON_ADDRESS': '127.0.0.1:2000',
+        'AUTO_INSTRUMENT': True,
+        # If turned on built-in database queries and template rendering will be recorded as subsegments
+        'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
+        'PLUGINS': (),
+        'SAMPLING': True,
+        'SAMPLING_RULES': None,
+        'AWS_XRAY_TRACING_NAME': "AuthServer",  # the segment name for segments generated from incoming requests
+        'DYNAMIC_NAMING': None,  # defines a pattern that host names should match
+        'STREAMING_THRESHOLD': None,  # defines when a segment starts to stream out its children subsegments
+    }
+
     API_URL = os.getenv('API_URL')
 else:
     DATABASES = {
