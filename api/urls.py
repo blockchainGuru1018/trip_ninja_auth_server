@@ -2,14 +2,14 @@ from django.urls import path, re_path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import UserLoginView, UserRegistrationView, ForgotPasswordView, ConfirmTokenView, ResetPasswordView, \
+from .views import UserSettingsView, UserRegistrationView, ForgotPasswordView, ConfirmTokenView, ResetPasswordView, \
     ChangePasswordView, UserLogoutView, UserDetailsView, SearchFlightsView, PriceFlightsView, BookView, \
     PriceMapView, QueueView, TicketView, CancelView, BookingDetailsView, BookingsListView
 
 app_name = 'api'
 urlpatterns = [
     path('register/', UserRegistrationView.as_view()),
-    path('login/', UserLoginView.as_view()),
+    path('settings/', UserSettingsView.as_view()),
     path('forgot-password/', ForgotPasswordView.as_view()),
     path('confirm-token/', ConfirmTokenView.as_view()),
     path('reset-password/', ResetPasswordView.as_view()),
