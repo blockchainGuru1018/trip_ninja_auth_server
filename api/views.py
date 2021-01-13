@@ -4,7 +4,7 @@ from django.conf import settings
 import uuid
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.response import Response
-from rest_auth.views import LoginView, LogoutView
+from rest_auth.views import LogoutView
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from .serializers import RegistrationSerializer, ForgotSerializer, ChangePasswordSerializer
