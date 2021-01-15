@@ -1,38 +1,34 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
 from rest_framework import status, permissions
+from django.conf import settings
 import uuid
 from rest_framework.generics import CreateAPIView, GenericAPIView
 from rest_framework.response import Response
-from rest_auth.views import LoginView, LogoutView
+from rest_auth.views import LogoutView
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
-from .serializers import RegistrationSerializer, ForgotSerializer, ConfirmTokenSerializer, ResetPasswordSerializer, \
-    ChangePasswordSerializer
+from .serializers import RegistrationSerializer, ForgotSerializer, ChangePasswordSerializer
 from users.models import User
 from api.service import add_common_parameters, send_api_request, get_user_queue
 
 
-class UserLoginView(LoginView):
-    def get_response(self):
-        original_response = super().get_response()
+class UserSettingsView(GenericAPIView):
+    def post(self, request):
+        user = request.user
 
         response = {
             "result": True,
             "data": {
-                "token": original_response.data.get('key'),
                 "user": {
-                    "id": self.user.id,
-                    "email": self.user.email,
-                    "username": self.user.username,
-                    "first_name": self.user.first_name,
-                    "last_name": self.user.last_name,
-                    "is_superuser": self.user.is_superuser,
-                    "is_agent": self.user.is_agent,
-                    "is_team_lead": self.user.is_team_lead,
-                    "is_agency_admin": self.user.is_agency_admin
+                    "id": user.id,
+                    "email": user.email,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "is_superuser": user.is_superuser,
+                    "is_agent": user.is_agent,
+                    "is_team_lead": user.is_team_lead,
+                    "is_agency_admin": user.is_agency_admin
                 }
             }
         }
@@ -137,7 +133,6 @@ class ChangePasswordView(CreateAPIView):
 
         return Response({"result": True}, status=status.HTTP_200_OK)
 
-
 class UserDetailsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
     def get(self, request):
@@ -201,7 +196,7 @@ class QueueView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'queue/'
         response = send_api_request('POST', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class TicketView(GenericAPIView):
@@ -209,7 +204,7 @@ class TicketView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'ticket/'
         response = send_api_request('POST', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class CancelView(GenericAPIView):
@@ -217,7 +212,7 @@ class CancelView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'book/'
         response = send_api_request('DELETE', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class BookingsListView(GenericAPIView):
