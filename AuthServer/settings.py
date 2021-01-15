@@ -77,7 +77,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AuthServer.wsgi.application'
 
-LOCAL_DEV_URL = 'http://127.0.0.2:8000/'
+LOCAL_DEV_URL = 'http://127.0.0.2:8000'
 
 SITE_ID = 1
 LANGUAGE_CODE = 'en-us'
@@ -86,6 +86,21 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_REGEX_WHITELIST = (
+    LOCAL_DEV_URL,
+    '.elasticbeanstalk.com',
+    '.amazonaws.com',
+    'http://tripninja-quicktrip-dev.s3-website-us-east-1.amazonaws.com'
+)
+
+CORS_ORIGIN_WHITELIST = (
+    LOCAL_DEV_URL,
+    'https://.elasticbeanstalk.com',
+    'https://.amazonaws.com',
+    'http://tripninja-quicktrip-dev.s3-website-us-east-1.amazonaws.com'
+)
+
 CSRF_TRUSTED_ORIGINS = [".elasticbeanstalk.com", ".tripninja.io"]
 CSRF_COOKIE_DOMAIN = LOCAL_DEV_URL
 CSRF_USE_SESSION = True
