@@ -1,5 +1,6 @@
 import os
 from decouple import config
+from aws_xray_sdk.core import patch
 
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
@@ -148,12 +149,15 @@ if 'RDS_DB_NAME' in os.environ:
         # If turned on built-in database queries and template rendering will be recorded as subsegments
         'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
         'PLUGINS': (),
-        'SAMPLING': True,
+        'SAMPLING': False,
         'SAMPLING_RULES': None,
         'AWS_XRAY_TRACING_NAME': "AuthServer",  # the segment name for segments generated from incoming requests
         'DYNAMIC_NAMING': None,  # defines a pattern that host names should match
         'STREAMING_THRESHOLD': None,  # defines when a segment starts to stream out its children subsegments
     }
+
+    libraries = (['requests'])
+    patch(libraries)
 
     API_URL = os.getenv('API_URL')
 else:
