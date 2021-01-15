@@ -165,6 +165,8 @@ class SearchFlightsView(GenericAPIView):
         url = settings.API_URL + 'search/' + request.user.search_endpoint + '/'
         search_request = add_common_parameters(request.data, request.user)
         search_result = send_api_request('POST', url, request.user, search_request)
+        print("got response")
+        print("response:", search_result)
         return Response(search_result, status=status.HTTP_200_OK)
 
 
