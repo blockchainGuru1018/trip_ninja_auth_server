@@ -196,7 +196,7 @@ class QueueView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'queue/'
         response = send_api_request('POST', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class TicketView(GenericAPIView):
@@ -204,7 +204,7 @@ class TicketView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'ticket/'
         response = send_api_request('POST', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class CancelView(GenericAPIView):
@@ -212,7 +212,7 @@ class CancelView(GenericAPIView):
     def post(self, request):
         url = settings.API_URL + 'book/'
         response = send_api_request('DELETE', url, request.user, request.data)
-        return Response(response, status=response.status_code)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class BookingsListView(GenericAPIView):
