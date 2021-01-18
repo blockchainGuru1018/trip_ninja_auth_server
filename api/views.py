@@ -10,7 +10,8 @@ from django.contrib.auth.hashers import make_password
 from .serializers import RegistrationSerializer, ForgotSerializer, ChangePasswordSerializer
 from users.models import User
 from api.service import add_common_parameters, send_api_request, get_user_queue
-
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 class UserSettingsView(GenericAPIView):
     def post(self, request):
@@ -158,6 +159,8 @@ class UserDetailsView(GenericAPIView):
 
 class SearchFlightsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
+
     def post(self, request):
         url = settings.API_URL + 'search/' + request.user.search_endpoint + '/'
         search_request = add_common_parameters(request.data, request.user)
@@ -167,6 +170,7 @@ class SearchFlightsView(GenericAPIView):
 
 class PriceMapView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'price-map/'
         price_map_response = send_api_request('GET', url, request.user, request.data)
@@ -175,6 +179,7 @@ class PriceMapView(GenericAPIView):
 
 class PriceFlightsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'price/' + request.user.search_endpoint + '/'
         price_result = send_api_request('POST', url, request.user, request.data)
@@ -183,6 +188,7 @@ class PriceFlightsView(GenericAPIView):
 
 class BookView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'book/' + request.user.booking_endpoint + '/'
         book_request = request.data
@@ -193,6 +199,7 @@ class BookView(GenericAPIView):
 
 class QueueView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'queue/'
         response = send_api_request('POST', url, request.user, request.data)
@@ -201,6 +208,7 @@ class QueueView(GenericAPIView):
 
 class TicketView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'ticket/'
         response = send_api_request('POST', url, request.user, request.data)
@@ -209,6 +217,7 @@ class TicketView(GenericAPIView):
 
 class CancelView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def post(self, request):
         url = settings.API_URL + 'book/'
         response = send_api_request('DELETE', url, request.user, request.data)
@@ -217,6 +226,7 @@ class CancelView(GenericAPIView):
 
 class BookingsListView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def get(self, request):
         url = settings.API_URL + request.get_full_path()[8:]
         booking_list = send_api_request('GET', url, request.user, request.data)
@@ -225,6 +235,7 @@ class BookingsListView(GenericAPIView):
 
 class BookingDetailsView(GenericAPIView):
     permission_classes = (permissions.IsAuthenticated,)
+    method_decorator(csrf_protect)
     def get(self, request):
         url = settings.API_URL + request.get_full_path()[8:]
         booking_detail = send_api_request('GET', url, request.user, request.data)

@@ -1,12 +1,13 @@
 import os
 from decouple import config
+from aws_xray_sdk.core import patch
 
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', False)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'asdfasdfasdfasdfasdfasdfs'
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '127.0.0.2', '192.168.0.103']
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = "users.User"
 
@@ -25,11 +26,15 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'rest_auth.registration',
     'corsheaders',
-
     'api',
     'common',
     'teams',
-    'users'
+    'users',
+    'health_check',
+    'health_check.db',
+    'health_check.cache',
+    'health_check.storage',
+    'health_check.contrib.psutil',
 ]
 
 MIDDLEWARE = [
@@ -45,7 +50,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
 ]
 
-ROOT_URLCONF = 'quick_trip.urls'
+
+ROOT_URLCONF = 'AuthServer.urls'
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
@@ -70,6 +76,10 @@ TEMPLATES = [
     },
 ]
 
+WSGI_APPLICATION = 'AuthServer.wsgi.application'
+
+LOCAL_DEV_URL = 'http://127.0.0.2:8000'
+
 SITE_ID = 1
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -77,28 +87,96 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 CORS_ORIGIN_ALLOW_ALL = True
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static_files')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_REGEX_WHITELIST = (
+    LOCAL_DEV_URL,
+    '.elasticbeanstalk.com',
+    '.amazonaws.com',
+    'http://tripninja-quicktrip-dev.s3-website-us-east-1.amazonaws.com'
+)
+
+CORS_ORIGIN_WHITELIST = (
+    LOCAL_DEV_URL,
+    'https://.elasticbeanstalk.com',
+    'https://.amazonaws.com',
+    'http://tripninja-quicktrip-dev.s3-website-us-east-1.amazonaws.com'
+)
+
+CSRF_TRUSTED_ORIGINS = [".elasticbeanstalk.com", ".tripninja.io"]
+CSRF_COOKIE_DOMAIN = LOCAL_DEV_URL
+CSRF_USE_SESSION = True
+CSRF_COOKIE_NAME = 'csrf_token'
+CSRF_COOKIE_SECURE = False
+
+STATIC_URL = './static/'
+STATIC_ROOT = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+    BASE_DIR]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 FIXTURE_DIRS = ['fixtures']
 
-DATABASES = {
-    "default": {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+if 'RDS_DB_NAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ['RDS_DB_NAME'],
+            'USER': os.environ['RDS_USERNAME'],
+            'PASSWORD': os.environ['RDS_PASSWORD'],
+            'HOST': os.environ['RDS_HOSTNAME'],
+            'PORT': os.environ['RDS_PORT'],
+        }
     }
-}
 
-API_URL = 'http://127.0.0.1:8000/'
+    #AWS X-Ray
+    MIDDLEWARE += [
+        'aws_xray_sdk.ext.django.middleware.XRayMiddleware',
+        'django.middleware.security.SecurityMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    ]
+
+    INSTALLED_APPS += ['aws_xray_sdk.ext.django']
+
+    XRAY_RECORDER = {
+        'AWS_XRAY_DAEMON_ADDRESS': '127.0.0.1:2000',
+        'AUTO_INSTRUMENT': False,
+        # If turned on built-in database queries and template rendering will be recorded as subsegments
+        'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
+        'PLUGINS': (),
+        'SAMPLING': False,
+        'SAMPLING_RULES': None,
+        'AWS_XRAY_TRACING_NAME': "AuthServer",  # the segment name for segments generated from incoming requests
+        'DYNAMIC_NAMING': None,  # defines a pattern that host names should match
+        'STREAMING_THRESHOLD': None,  # defines when a segment starts to stream out its children subsegments
+    }
+
+    libraries = (['requests'])
+    patch(libraries)
+
+    API_URL = os.getenv('API_URL')
+else:
+    DATABASES = {
+        "default": {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT'),
+        }
+    }
+    API_URL = 'http://127.0.0.1:8000/'
+
+
 
 if ENVIRONMENT == 'production':
-    DEBUG = False
+    DEBUG = os.environ.get('DEBUG', False)
     SECRET_KEY = os.getenv('SECRET_KEY')
     SESSION_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
