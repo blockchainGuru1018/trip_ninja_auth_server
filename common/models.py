@@ -18,6 +18,12 @@ class CommonParameters(models.Model):
     date_type = models.CharField(max_length=10)
     booking_enabled = models.BooleanField(default=True)
     virtual_interlining = models.BooleanField(default=True)
+    view_pnr_pricing = models.BooleanField(default=True)
+    amadeus_branded_fares = models.BooleanField(default=False)
+    markup = models.BooleanField(default=True)
+    markup_visible = models.BooleanField(default=False)
+    markup_by_itinerary = models.BooleanField(default=False)
+    consolidate_ticket = models.BooleanField(default=False)
     exclude_carriers = JSONField(max_length=255, default=dict, blank=True)
     DATE_CHOICES = ("USA", "UK", "CAD", "INR")
 

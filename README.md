@@ -17,6 +17,16 @@
 - initial data set:
 
   `python manage.py loaddata sampledata.yaml`
+  
+- Setup local environment variables. Create a file named '.env' in the root of the project with the following fields (Customized to your local postgres db name, user and password).
+SECRET_KEY=''
+
+`DB_NAME='trip_ninja_auth'
+DB_USER='postgres'
+DB_PASSWORD='password'
+
+DB_HOST='localhost'
+DB_PORT='5432'`
 
 - Open another command line window.
 
