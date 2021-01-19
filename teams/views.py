@@ -728,7 +728,7 @@ class DataSourceView(GenericAPIView):
     permission_classes = IsAgencyAdmin,
 
     def get(self, request):
-        data_source = DataSource.objects.filter(agency=None)
+        data_source = DataSource.objects.all()
         data_source_detail = []
         for data in data_source:
             data_source_detail.append({
