@@ -238,12 +238,12 @@ class SearchDetailView(GenericAPIView):
                 search = []
 
         for sea in search:
-            if sea.is_team_lead:
-                role = "Team Lead"
+            if sea.is_superuser:
+                role = "Super User"
             elif sea.is_agency_admin:
                 role = "Agency Admin"
-            elif sea.is_superuser:
-                role = "Super User"
+            elif sea.is_team_lead:
+                role = "Team Lead"
             else:
                 role = "Agent"                
             if sea.team is None:
