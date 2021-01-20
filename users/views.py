@@ -239,6 +239,16 @@ class SearchDetailView(GenericAPIView):
 
         for sea in search:
             booking_enabled = sea.common_parameters.booking_enabled
+            
+            if sea.is_superuser:
+                role = "Super User"
+            elif sea.is_agency_admin:
+                role = "Agency Admin"
+            elif sea.is_team_lead:
+                role = "Team Lead"
+            else:
+                role = "Agent"                
+
             if sea.team is None:
                 team_name = None
                 team_id = None
@@ -260,8 +270,10 @@ class SearchDetailView(GenericAPIView):
                 "team_id": team_id,
                 "team_name": team_name,
                 "is_active": sea.is_active,
+
                 "booking_enabled": booking_enabled,
-                "role": "Team Lead"
+                "role": role
+
             })
         return Response(
             {
