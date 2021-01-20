@@ -238,6 +238,7 @@ class SearchDetailView(GenericAPIView):
                 search = []
 
         for sea in search:
+            booking_enabled = sea.common_parameters.booking_enabled
             if sea.team is None:
                 team_name = None
                 team_id = None
@@ -259,6 +260,7 @@ class SearchDetailView(GenericAPIView):
                 "team_id": team_id,
                 "team_name": team_name,
                 "is_active": sea.is_active,
+                "booking_enabled": booking_enabled,
                 "role": "Team Lead"
             })
         return Response(
@@ -649,7 +651,7 @@ class UserUpdateView(GenericAPIView):
         user.last_name = serializer.data.get('last_name')
         user.email = serializer.data.get('email')
         user.phone_number = serializer.data.get('phone_number')
-        user.is_active = serializer.data.get('is_active')
+        user.common_parameters.booking_enabled = serializer.data.get('booking_enabled')
         if serializer.data.get('team_id'):
             user.team = Team.objects.get(id=serializer.data.get('team_id'))
             team_id = user.team.id
@@ -675,6 +677,7 @@ class UserUpdateView(GenericAPIView):
                         "email": user.email,
                         "phone_number": user.phone_number,
                         "is_active": user.is_active,
+                        "booking_enabled": user.common_parameters.booking_enabled,
                         "team_id": team_id,
                         "team_name": team_name,
                         "agency_id": agency_id,

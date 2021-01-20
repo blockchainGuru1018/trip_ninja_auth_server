@@ -110,7 +110,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     email = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     phone_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    is_active = serializers.BooleanField(required=False)
+    booking_enabled = serializers.BooleanField(required=False)
 
     default_error_messages = {
         'invalid_user_id': _('user_id is invalid.'),
@@ -118,24 +118,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         'invalid_first_name': _('first_name is invalid.'),
         'invalid_last_name': _('last_name is invalid.'),
         'invalid_email': _('email is invalid.'),
-        'invalid_is_active': _('is_active is invalid.'),
+        'invalid_booking_enabled': _('booking_enabled is invalid.'),
     }
 
     class Meta:
         model = User
-        fields = ("user_id", "team_id", "agency_id", "first_name", "last_name", "email", "phone_number", "is_active")
+        fields = ("user_id", "team_id", "agency_id", "first_name", "last_name", "email", "phone_number", "booking_enabled")
 
     def validate(self, attrs):
         user_id = attrs.get("user_id")
-        is_active = attrs.get("is_active")
+        booking_enabled = attrs.get("booking_enabled")
         first_name = attrs.get("first_name")
         last_name = attrs.get("last_name")
         email = attrs.get("email")
 
         if user_id is None:
             raise CustomException(code=10, message=self.error_messages['invalid_user_id'])
-        if is_active is None:
-            raise CustomException(code=12, message=self.error_messages['invalid_is_active'])
+        if booking_enabled is None:
+            raise CustomException(code=12, message=self.error_messages['invalid_booking_enabled'])
         if first_name is None:
             raise CustomException(code=13, message=self.error_messages['invalid_first_name'])
         if last_name is None:
