@@ -652,6 +652,7 @@ class UserUpdateView(GenericAPIView):
         user.email = serializer.data.get('email')
         user.phone_number = serializer.data.get('phone_number')
         user.common_parameters.booking_enabled = serializer.data.get('booking_enabled')
+        user.common_parameters.save()
         if serializer.data.get('team_id'):
             user.team = Team.objects.get(id=serializer.data.get('team_id'))
             team_id = user.team.id
