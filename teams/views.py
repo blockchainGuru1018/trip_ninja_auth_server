@@ -480,9 +480,14 @@ class AddAgencyView(GenericAPIView):
                 if data:
                     try:
                         data_item = DataSource.objects.get(id=data['id'])
-                        data_item.pcc = data['pcc']
-                        data_item.agency = agency
-                        data_item.save()
+                        new_data_item = DataSource()
+                        new_data_item.name = data_item.name
+                        new_data_item.pcc = data['pcc']
+                        new_data_item.provider = data_item.provider
+                        new_data_item.active = data_item.active
+                        new_data_item.agency = agency
+                        new_data_item.queue = data_item.queue
+                        new_data_item.save()
                     except ObjectDoesNotExist:
                         return Response(
                             {
